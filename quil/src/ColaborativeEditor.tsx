@@ -7,14 +7,12 @@ import { QuillBinding } from "y-quill"; // Make sure this is correctly imported
 
 const Inline = Quill.import("blots/inline");
 
-function generateUniqueName() : string {
-  return   Math.random().toString(36).substr(2, 9);
-
+function generateUniqueName(): string {
+  return Math.random().toString(36).substr(2, 9);
 }
 class SearchedStringBlot extends Inline {}
 
-
-
+const searchRandName = generateUniqueName();
 
 SearchedStringBlot.blotName = searchRandName;
 SearchedStringBlot.className = "ql-searched-string";
@@ -24,9 +22,6 @@ export default function CollaborativeEditor() {
   const quillRef = useRef<ReactQuill | null>(null);
   let [searchValue, setSearchValue] = useState<string>("");
   const [textLength, setTextLength] = useState<number>(0); // State to hold the text length
-
-
-  
 
   useEffect(() => {
     Quill.register(SearchedStringBlot);
