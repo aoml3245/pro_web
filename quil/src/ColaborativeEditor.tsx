@@ -17,6 +17,7 @@ const searchRandName = generateUniqueName();
 SearchedStringBlot.blotName = searchRandName;
 SearchedStringBlot.className = "ql-searched-string";
 SearchedStringBlot.tagName = "div";
+SearchedStringBlot.
 
 export default function CollaborativeEditor() {
   const quillRef = useRef<ReactQuill | null>(null);
