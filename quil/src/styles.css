@@ -1,0 +1,12 @@
+.App {
+  font-family: sans-serif;
+  text-align: center;
+}
+
+
+.ql-searched-string {
+  background-color: #f8ff00;
+
+  display: inline; 
+
+}
