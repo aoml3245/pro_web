@@ -3,10 +3,19 @@
   text-align: center;
 }
 
-
 .ql-searched-string {
   background-color: #f8ff00;
 
-  display: inline; 
-
+  display: inline;
 }
+.ql-commented-string {
+  background-color: #f8ff00;
+
+  display: inline;
+}
+.ql-comment-string {
+  background-color: #f8ff00;
+
+  display: none;
+}
+

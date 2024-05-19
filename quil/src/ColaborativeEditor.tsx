@@ -12,19 +12,35 @@ function generateUniqueName(): string {
 }
 class SearchedStringBlot extends Inline {}
 
+class CommentedStringBlot extends Inline {}
+
+class CommentStringBlot extends Inline {}
+
 const searchRandName = generateUniqueName();
 
 SearchedStringBlot.blotName = searchRandName;
 SearchedStringBlot.className = "ql-searched-string";
 SearchedStringBlot.tagName = "div";
 
+CommentedStringBlot.blotName = "commented";
+CommentedStringBlot.className = "ql-commented-string";
+CommentedStringBlot.tagName = "div";
+
+CommentStringBlot.blotName = "comment";
+CommentStringBlot.className = "ql-comment-string";
+CommentStringBlot.tagName = "div";
+
 export default function CollaborativeEditor() {
   const quillRef = useRef<ReactQuill | null>(null);
   let [searchValue, setSearchValue] = useState<string>("");
   const [textLength, setTextLength] = useState<number>(0); // State to hold the text length
+  const [xy, setXY] = useState({ x: 0, y: 0 });
+  const [commentContents, setCommentContents] = useState<string>("");
 
   useEffect(() => {
     Quill.register(SearchedStringBlot);
+    Quill.register(CommentedStringBlot);
+    Quill.register(CommentStringBlot);
     // Initialize the Yjs document
     const ydoc = new Y.Doc();
     // Connect to the public Yjs Websocket server using the unique room name
@@ -68,6 +84,29 @@ export default function CollaborativeEditor() {
 
       console.log(string);
     });
+
+    quillRef.current!.onEditorChange = () => {
+      let commented = document.getElementsByClassName("ql-commented-string");
+      Array.from(commented).forEach(async (c) => {
+        c.addEventListener("mouseover", async (e: Event) => {
+          // 클릭 이벤트 부모 노드로 전파 차단
+          e.stopPropagation();
+
+          let commentedDiv = (e as PointerEvent).target as HTMLDivElement; // 코멘트된 부분
+          let commentDiv = (
+            (e as PointerEvent).target as HTMLDivElement
+          ).getElementsByClassName("ql-comment-string")[0]; // 코멘트
+          let boundingRect = commentedDiv.getBoundingClientRect();
+
+          setXY({
+            x: boundingRect.left,
+            y: boundingRect.bottom,
+          }); // 모달 div 위치 지정
+          // 코멘트 내용 정의
+          setCommentContents(commentDiv.textContent ?? "");
+        });
+      });
+    };
 
     // 원고 내용 출력, 델타 format(JSON 형식)
     const ytextdeltaBtn = document.getElementById("ytextdelta");
@@ -145,34 +184,6 @@ export default function CollaborativeEditor() {
     }
     return indices;
   }
-
-  // function search() {
-  //   console.log("test");
-  //   const SearchedString = (
-  //     document.getElementById("search-input") as HTMLInputElement
-  //   ).value;
-  //   const editor = quillRef.current!.getEditor();
-  //   editor.formatText(0, editor.getText().length, "SearchedString", false);
-
-  //   if (SearchedString) {
-  //     let totalText: string = editor.getText();
-  //     let re = new RegExp(SearchedString, "gi");
-  //     let match = re.test(totalText);
-
-  //     console.log(match);
-  //     if (match) {
-  //       let indices = getIndicesOf(SearchedString, totalText);
-  //       console.log(indices);
-  //       let length = SearchedString.length;
-  //       indices.forEach((index: number) =>
-  //         editor.formatText(index, length, "SearchedString", true)
-  //       );
-  //     }
-  //   } else {
-  //     editor.formatText(0, editor.getText().length, "SearchedString", false);
-  //   }
-  // }
-
   const onSearch = (e: React.FormEvent<HTMLInputElement>) => {
     const newValue = e.currentTarget.value;
     setSearchValue(newValue);
@@ -196,6 +207,36 @@ export default function CollaborativeEditor() {
     }
   };
 
+  const commenting = () => {
+    const editor = quillRef.current!.getEditor();
+    const selected = quillRef.current?.selection;
+    if (
+      selected === undefined ||
+      selected?.index === undefined ||
+      selected.length === undefined
+    )
+      return;
+
+    const index_: number = selected.index;
+    const length_: number = selected.length;
+    let format = editor.getFormat(selected);
+
+    //중복 코멘트 방지
+    if (format.commented !== undefined && format.commented === true) {
+      return;
+    }
+
+    const comment: string | null = prompt("what is your comment");
+    if (comment === null || comment === "") return;
+
+    //선택된 부분과 코멘트 부분 스타일 지정
+    editor.insertText(index_ + length_, comment);
+
+    editor.formatText(index_ + length_, comment.length, "comment", true);
+
+    editor.formatText(index_, comment.length + length_, "commented", true);
+  };
+
   const handleEditorChange = (
     content: any,
     delta: any,
@@ -206,29 +247,49 @@ export default function CollaborativeEditor() {
   };
   return (
     <>
-      <input
-        type="search"
-        placeholder="검색어를 입력하세요"
-        id="search-input"
-        onChange={onSearch}
-      />
-      <button id="search">find</button>
-      <div>Text Length: {textLength}</div>
-      <p>
-        <button type="button" id="ytextstring">
-          텍스트로 출력하기
-        </button>
-        <button type="button" id="ytextdelta">
-          델타로 출력하기
-        </button>
-        <br></br>
-        <input type="file" id="fileInput" accept=".json"></input>
-        <button type="button" id="quillset">
-          델타 불러오기
-        </button>
-      </p>
+      <div
+        onMouseOver={(e) => {
+          // if (e.currentTarget != e.target) return;
+          setCommentContents("");
+        }}
+      >
+        <input
+          type="search"
+          placeholder="검색어를 입력하세요"
+          id="search-input"
+          onChange={onSearch}
+        />
+        <button id="search">find</button>
+        <div>Text Length: {textLength}</div>
+        <p>
+          <button type="button" id="ytextstring">
+            텍스트로 출력하기
+          </button>
+          <button type="button" id="ytextdelta">
+            델타로 출력하기
+          </button>
+          <br></br>
+          <input type="file" id="fileInput" accept=".json"></input>
+          <button type="button" id="quillset">
+            델타 불러오기
+          </button>
+          <button type="button" onClick={commenting}>
+            코멘트 달기
+          </button>
+        </p>
 
-      <ReactQuill ref={quillRef} theme="snow" onChange={handleEditorChange} />
+        <div
+          style={{ position: "absolute", left: xy.x, top: xy.y }}
+          onMouseOver={(e) => {
+            e.stopPropagation();
+          }}
+        >
+          {commentContents}
+          <div />
+        </div>
+
+        <ReactQuill ref={quillRef} theme="snow" onChange={handleEditorChange} />
+      </div>
     </>
   );
 }
