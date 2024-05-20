@@ -47,7 +47,7 @@ export default function CollaborativeEditor() {
     const provider = new WebsocketProvider(
       //"wss://knuproweb.kro.kr/api/",
       "ws://localhost:8080/",
-      "my_room",
+      "my_room", // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
     const ytext = ydoc.getText("quill");
@@ -163,32 +163,6 @@ export default function CollaborativeEditor() {
       }
     });
 
-    // 원고 이름 지정
-    const manuscriptNameBtn = document.getElementById("manuscript-name-btn");
-    manuscriptNameBtn?.addEventListener("click", () => {
-      const manuscriptNameInput = document.getElementById(
-        "manuscript-name-input"
-      ) as HTMLInputElement;
-      const manuscriptName = document.getElementById(
-        "manuscript-name"
-      ) as HTMLDivElement;
-
-      manuscriptName.textContent = manuscriptNameInput.value;
-    });
-
-    // 원고 자동 저장
-    function autoSaveManuscript() {
-      const autoSaveTime = document.getElementById(
-        "autosave-time"
-      ) as HTMLSpanElement;
-      const now = new Date();
-
-      autoSaveTime.textContent = now.toLocaleString();
-    }
-
-    // 10초마다 자동 저장
-    const intervalId = setInterval(autoSaveManuscript, 10000);
-
     // Cleanup function
     return () => {
       if (binding) {
@@ -303,14 +277,6 @@ export default function CollaborativeEditor() {
           <button type="button" onClick={commenting}>
             코멘트 달기
           </button>
-        </p>
-        <p>
-          <input type="text" id="manuscript-name-input" accept=".json"></input>
-          <button type="button" id="manuscript-name-btn">
-            원고 이름 지정
-          </button>
-          <div id="manuscript-name">원고 이름</div>
-          자동 저장 시간 : <span id="autosave-time">2000-01-01 00:00:00</span>
         </p>
 
         <div
