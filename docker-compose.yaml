@@ -25,3 +25,16 @@ services:
       context: ./ysocket
       # ./velog/Dockerfile을 사용해서 build
       dockerfile: Dockerfile
+  mongodb:
+    container_name: "mongodb"
+    build:
+      context: ./mongodb
+      dockerfile: Dockerfile
+    ports:
+      - 27017:27017
+    volumes:
+      - ./data:/data
+    environment:
+      - MONGODB_INITDB_ROOT_USERNAME=test
+      - MONGODB_INITDB_ROOT_PASSWORD=test
+      - MONGODB_INITDB_DATABASE=proweb
