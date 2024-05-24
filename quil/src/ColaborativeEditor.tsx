@@ -59,8 +59,8 @@ export default function CollaborativeEditor() {
     const ydoc = new Y.Doc();
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
-      //"wss://knuproweb.kro.kr/api/",
-      "ws://localhost:8080/",
+      "wss://knuproweb.kro.kr/api/",
+      // "ws://localhost:8080/",
       "my_room", // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
