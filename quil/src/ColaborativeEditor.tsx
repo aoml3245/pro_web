@@ -32,6 +32,8 @@ CommentStringBlot.tagName = "div";
 
 export default function CollaborativeEditor() {
   const quillRef = useRef<ReactQuill | null>(null);
+  const [roomname, setRoomname] = useState<string>("my_room"); // 원고 이름
+  const roomnameInputRef = useRef<HTMLInputElement>(null);
   let [searchValue, setSearchValue] = useState<string>("");
   const [textLength, setTextLength] = useState<number>(0); // State to hold the text length
   const [xy, setXY] = useState({ x: 0, y: 0 });
@@ -43,17 +45,18 @@ export default function CollaborativeEditor() {
     Quill.register(CommentStringBlot);
     // Initialize the Yjs document
     const ydoc = new Y.Doc();
+    const ytext = ydoc.getText("quill");
+
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
       //"wss://knuproweb.kro.kr/api/",
       "ws://localhost:8080/",
-      "my_room", // 원고 이름, 이대로 DB에 저장됩니다.
+      roomname, // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
-    const ytext = ydoc.getText("quill");
-    let binding: any;
 
     // Initialize the Quill editor when the component is mounted
+    let binding: any;
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       binding = new QuillBinding(ytext, editor, provider.awareness);
@@ -170,7 +173,7 @@ export default function CollaborativeEditor() {
       }
       provider.disconnect();
     };
-  }, []);
+  }, [roomname]);
 
   function getIndicesOf(searchStr: string, totalString: string) {
     let searchStrLen = searchStr.length;
@@ -246,6 +249,17 @@ export default function CollaborativeEditor() {
   ) => {
     console.log(content, delta);
   };
+
+  // roomname(원고) 변경
+  // roomname 값을 바꿉니다. useEffect가 이를 알아채고 다시 실행되어 편집기를 다시 생성합니다.
+  const roonnameSetBtn = document.getElementById("roomname-set-btn");
+  roonnameSetBtn?.addEventListener("click", () => {
+    if (!roomnameInputRef.current) {
+      return;
+    }
+    setRoomname(roomnameInputRef.current.value);
+  });
+
   return (
     <>
       <div
@@ -269,7 +283,7 @@ export default function CollaborativeEditor() {
           <button type="button" id="ytextdelta">
             델타로 출력하기
           </button>
-          <br></br>
+          <br />
           <input type="file" id="fileInput" accept=".json"></input>
           <button type="button" id="quillset">
             델타 불러오기
@@ -277,6 +291,19 @@ export default function CollaborativeEditor() {
           <button type="button" onClick={commenting}>
             코멘트 달기
           </button>
+        </p>
+        <p>
+          <input
+            type="text"
+            id="roomname"
+            ref={roomnameInputRef}
+            defaultValue={roomname}
+          />
+          <button type="button" id="roomname-set-btn">
+            원고 이름 지정
+          </button>
+          <br />
+          {roomname}
         </p>
 
         <div
