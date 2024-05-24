@@ -59,8 +59,9 @@ export default function CollaborativeEditor() {
     const ydoc = new Y.Doc();
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
-      "wss://knuproweb.kro.kr/api/",
-      "my_room",
+      //"wss://knuproweb.kro.kr/api/",
+      "ws://localhost:8080/",
+      "my_room", // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
     const ytext = ydoc.getText("quill");
@@ -141,6 +142,26 @@ export default function CollaborativeEditor() {
         });
       });
     };
+
+    // // 원고 내용 출력, text
+    // const ytextstringBtn = document.getElementById("ytextstring");
+    // ytextstringBtn?.addEventListener("click", () => {
+    //   const string = ytext.toString();
+    //   const blob = new Blob([string], { type: "text/plain" });
+    //   const url = URL.createObjectURL(blob);
+
+    //   const a = document.createElement("a");
+    //   a.href = url;
+    //   a.download = "manuscript.txt";
+
+    //   document.body.appendChild(a);
+    //   a.click();
+
+    //   document.body.removeChild(a);
+    //   URL.revokeObjectURL(url);
+
+    //   console.log(string);
+    // });
 
     // 원고 내용 출력, 델타 format(JSON 형식)
     const ytextdeltaBtn = document.getElementById("ytextdelta");
