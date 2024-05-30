@@ -16,8 +16,8 @@ const server = http.createServer(app);
 const host = "localhost";
 const port = number.parseInt("8080");
 
-const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
-//const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 로컬 DB 테스트 용 URL
+//const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
+const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 로컬 DB 테스트 용 URL
 
 wss.on("connection", yUtils.setupWSConnection);
 
@@ -81,6 +81,22 @@ server.listen(port, () => {
   console.log(`running at '${host}' on port ${port}`);
 });
 
+// 원고 목록 반환 api
+// POST /api/manuscripts
+/* request 형식
+  {
+    "collectionName" : "사용자 이름"
+  }
+*/
+/* response 형식
+{
+  "manuscripts": [
+      "원고 1",
+      "manuscript two",
+      "One Go 셋"
+  ]
+}
+*/
 app.post("/api/manuscripts", async (req, res) => {
   const { collectionName } = req.body;
   console.log(`원고 목록 불러오기 : ${collectionName}`);
@@ -94,5 +110,5 @@ app.post("/api/manuscripts", async (req, res) => {
   const allDocNames = await manuscriptListMdb.getAllDocNames();
   console.log(allDocNames);
 
-  res.json({ message: `hi` });
+  res.json({ manuscripts: allDocNames });
 });
