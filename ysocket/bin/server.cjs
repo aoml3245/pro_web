@@ -2,6 +2,7 @@
 const WebSocket = require("ws");
 const http = require("http");
 const express = require("express");
+const cors = require("cors");
 const number = require("lib0/number");
 const wss = new WebSocket.Server({ noServer: true });
 const Y = require("yjs");
@@ -11,13 +12,14 @@ const { MongodbPersistence } = require("y-mongodb-provider");
 const app = express();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // 모든 도메인에서의 요청 허용
 
 const server = http.createServer(app);
 const host = "localhost";
 const port = number.parseInt("8080");
 
-//const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
-const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 로컬 DB 테스트 용 URL
+const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
+//const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 테스트용 로컬 DB  URL
 
 wss.on("connection", yUtils.setupWSConnection);
 
