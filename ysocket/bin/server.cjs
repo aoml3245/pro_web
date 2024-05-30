@@ -36,7 +36,7 @@ server.on("upgrade", (request, socket, head) => {
 // localhost말고 IP를 직접 써야 문제가 없습니다.
 // mongodb://<주소>:<포트번호>/<데이터베이스 이름>
 // collectionName에 없는 콜렉션을 써도 자동으로 생성, 사용자(혹은 그룹) 구별에 유용할 것 같습니다.
-const mdb = new MongodbPersistence("mongodb://127.0.0.1:27017/webpro", {
+const mdb = new MongodbPersistence("mongodb://mongodb:27017/webpro", {
   collectionName: "user1_manuscript",
   flushSize: 100,
   multipleCollections: false,

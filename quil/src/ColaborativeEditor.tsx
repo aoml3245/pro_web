@@ -38,6 +38,20 @@ export default function CollaborativeEditor() {
   const [textLength, setTextLength] = useState<number>(0); // State to hold the text length
   const [xy, setXY] = useState({ x: 0, y: 0 });
   const [commentContents, setCommentContents] = useState<string>("");
+  const [clicked, setClicked] = useState(false);
+  const [points, setPoints] = useState({
+    x: 0,
+    y: 0,
+  });
+  const [selectedComment, setSelectedComment] = useState<any>();
+
+  useEffect(() => {
+    const handleClick = () => setClicked(false);
+    document.addEventListener("click", handleClick);
+    return () => {
+      document.removeEventListener("click", handleClick);
+    };
+  }, []);
 
   useEffect(() => {
     Quill.register(SearchedStringBlot);
@@ -49,8 +63,8 @@ export default function CollaborativeEditor() {
 
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
-      //"wss://knuproweb.kro.kr/api/",
-      "ws://localhost:8080/",
+      "wss://knuproweb.kro.kr/api/",
+      //"ws://localhost:8080/",
       roomname, // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
@@ -68,29 +82,6 @@ export default function CollaborativeEditor() {
     };
 
     ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
-
-    quillRef.current!.onEditorChange = () => {
-      let commented = document.getElementsByClassName("ql-commented-string");
-      Array.from(commented).forEach(async (c) => {
-        c.addEventListener("mouseover", async (e: Event) => {
-          // 클릭 이벤트 부모 노드로 전파 차단
-          e.stopPropagation();
-
-          let commentedDiv = (e as PointerEvent).target as HTMLDivElement; // 코멘트된 부분
-          let commentDiv = (
-            (e as PointerEvent).target as HTMLDivElement
-          ).getElementsByClassName("ql-comment-string")[0]; // 코멘트
-          let boundingRect = commentedDiv.getBoundingClientRect();
-
-          setXY({
-            x: boundingRect.left,
-            y: boundingRect.bottom,
-          }); // 모달 div 위치 지정
-          // 코멘트 내용 정의
-          setCommentContents(commentDiv.textContent ?? "");
-        });
-      });
-    };
 
     // 원고 내용 출력, text
     const ytextstringBtn = document.getElementById("ytextstring");
@@ -111,6 +102,69 @@ export default function CollaborativeEditor() {
 
       console.log(string);
     });
+    // quillRef.current!.on("contextmenu", () => {});
+
+    quillRef.current!.editor?.on(
+      "selection-change",
+      (range, oldRange, source) => {
+        if (range) {
+          setSelectedComment(range);
+        }
+      }
+    );
+
+    quillRef.current!.onEditorChange = () => {
+      let commented = document.getElementsByClassName("ql-commented-string");
+      Array.from(commented).forEach(async (c) => {
+        c.addEventListener("contextmenu", async (e: Event) => {
+          setSelectedComment(c);
+          e.preventDefault();
+          e.stopPropagation();
+          setClicked(true);
+          setPoints({
+            x: (e as PointerEvent).pageX,
+            y: (e as PointerEvent).pageY,
+          });
+        });
+
+        c.addEventListener("mouseover", async (e: Event) => {
+          // 클릭 이벤트 부모 노드로 전파 차단
+          e.stopPropagation();
+
+          let commentedDiv = (e as PointerEvent).target as HTMLDivElement; // 코멘트된 부분
+          let commentDiv = ((e as PointerEvent).target as HTMLDivElement)
+            .nextElementSibling as HTMLDivElement;
+          let boundingRect = commentedDiv.getBoundingClientRect();
+
+          setXY({
+            x: boundingRect.left,
+            y: boundingRect.bottom,
+          }); // 모달 div 위치 지정
+          // 코멘트 내용 정의
+          setCommentContents(commentDiv.textContent ?? "");
+        });
+      });
+    };
+
+    // // 원고 내용 출력, text
+    // const ytextstringBtn = document.getElementById("ytextstring");
+    // ytextstringBtn?.addEventListener("click", () => {
+    //   const string = ytext.toString();
+    //   const blob = new Blob([string], { type: "text/plain" });
+    //   const url = URL.createObjectURL(blob);
+
+    //   const a = document.createElement("a");
+    //   a.href = url;
+    //   a.download = "manuscript.txt";
+
+    //   document.body.appendChild(a);
+    //   a.click();
+
+    //   document.body.removeChild(a);
+    //   URL.revokeObjectURL(url);
+
+    //   console.log(string);
+    // });
 
     // 원고 내용 출력, 델타 format(JSON 형식)
     const ytextdeltaBtn = document.getElementById("ytextdelta");
@@ -223,22 +277,93 @@ export default function CollaborativeEditor() {
 
     const index_: number = selected.index;
     const length_: number = selected.length;
-    let format = editor.getFormat(selected);
-
-    //중복 코멘트 방지
-    if (format.commented !== undefined && format.commented === true) {
-      return;
+    for (let i = index_; i < index_ + length_; i++) {
+      let format = editor.getFormat(i, 1);
+      //중복 코멘트 방지
+      if (format.commented !== undefined && format.commented === true) {
+        alert("현재 버전에서는 중복된 코멘트를 사용할 수 없습니다.");
+        return;
+      }
     }
 
     const comment: string | null = prompt("what is your comment");
     if (comment === null || comment === "") return;
 
-    //선택된 부분과 코멘트 부분 스타일 지정
+    // //선택된 부분과 코멘트 부분 스타일 지정
     editor.insertText(index_ + length_, comment);
+
+    editor.formatText(index_ + length_, comment.length, "commented", false);
 
     editor.formatText(index_ + length_, comment.length, "comment", true);
 
-    editor.formatText(index_, comment.length + length_, "commented", true);
+    editor.formatText(index_, length_, "commented", true);
+  };
+
+  const editComment = () => {
+    const editor = quillRef.current!.getEditor();
+    const selected = selectedComment;
+    if (
+      selected === undefined ||
+      selected?.index === undefined ||
+      selected.length === undefined
+    )
+      return;
+
+    const index_: number = selected.index;
+    let format = editor.getFormat(selected);
+
+    const leaf = editor.getLeaf(index_);
+    console.log(leaf[0]);
+    const leafStartPoint = index_ - leaf[1];
+    const leafLength = leaf[0].text.length;
+
+    const commentLength = leaf[0].parent.next.children.head.text.length;
+
+    editor.deleteText(leafStartPoint + leafLength, commentLength);
+
+    editor.formatText(leafStartPoint, leafLength, "commented", false);
+
+    setCommentContents("");
+
+    const comment: string | null = prompt("what is your comment");
+    if (comment === null || comment === "") return;
+
+    // //선택된 부분과 코멘트 부분 스타일 지정
+    editor.insertText(leafStartPoint + leafLength, comment);
+
+    editor.formatText(
+      leafStartPoint + leafLength,
+      comment.length,
+      "comment",
+      true
+    );
+
+    editor.formatText(leafStartPoint, leafLength, "commented", true);
+  };
+
+  const deleteComment = () => {
+    const editor = quillRef.current!.getEditor();
+    const selected = selectedComment;
+    if (
+      selected === undefined ||
+      selected?.index === undefined ||
+      selected.length === undefined
+    )
+      return;
+
+    const index_: number = selected.index;
+    let format = editor.getFormat(selected);
+
+    const leaf = editor.getLeaf(index_);
+    console.log(leaf[0]);
+    const leafStartPoint = index_ - leaf[1];
+    const leafLength = leaf[0].text.length;
+
+    const commentLength = leaf[0].parent.next.children.head.text.length;
+
+    editor.deleteText(leafStartPoint + leafLength, commentLength);
+    editor.formatText(leafStartPoint, leafLength, "commented", false);
+    setCommentContents("");
   };
 
   const handleEditorChange = (
@@ -318,6 +443,21 @@ export default function CollaborativeEditor() {
 
         <ReactQuill ref={quillRef} theme="snow" onChange={handleEditorChange} />
       </div>
+      {clicked && (
+        <div
+          style={{
+            position: "absolute",
+            left: points.x,
+            top: points.y,
+            background: "white",
+          }}
+        >
+          <ul>
+            <li onClick={editComment}>수정</li>
+            <li onClick={deleteComment}>삭제</li>
+          </ul>
+        </div>
+      )}
     </>
   );
 }
