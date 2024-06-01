@@ -59,6 +59,8 @@
     ]
   },
   "dependencies": {
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
     "lib0": "^0.2.52",
     "lodash.debounce": "^4.0.8",
     "y-mongodb-provider": "^0.1.10",

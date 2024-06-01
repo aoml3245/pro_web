@@ -1,19 +1,25 @@
 #!/usr/bin/env node
 const WebSocket = require("ws");
 const http = require("http");
+const express = require("express");
+const cors = require("cors");
 const number = require("lib0/number");
 const wss = new WebSocket.Server({ noServer: true });
 const Y = require("yjs");
 const yUtils = require("./utils.cjs");
 const { MongodbPersistence } = require("y-mongodb-provider");
 
+const app = express();
+app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
+app.use(cors()); // 모든 도메인에서의 요청 허용
+
+const server = http.createServer(app);
 const host = "localhost";
 const port = number.parseInt("8080");
 
-const server = http.createServer((_request, response) => {
-  response.writeHead(200, { "Content-Type": "text/plain" });
-  response.end("okay");
-});
+const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
+//const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 테스트용 로컬 DB  URL
 
 wss.on("connection", yUtils.setupWSConnection);
 
@@ -36,7 +42,7 @@ server.on("upgrade", (request, socket, head) => {
 // localhost말고 IP를 직접 써야 문제가 없습니다.
 // mongodb://<주소>:<포트번호>/<데이터베이스 이름>
 // collectionName에 없는 콜렉션을 써도 자동으로 생성, 사용자(혹은 그룹) 구별에 유용할 것 같습니다.
-const mdb = new MongodbPersistence("mongodb://mongodb:27017/webpro", {
+const mdb = new MongodbPersistence(mdbUrl, {
   collectionName: "user1_manuscript",
   flushSize: 100,
   multipleCollections: false,
@@ -75,4 +81,36 @@ yUtils.setPersistence({
 
 server.listen(port, () => {
   console.log(`running at '${host}' on port ${port}`);
+});
+
+// 원고 목록 반환 api
+// POST /api/manuscripts
+/* request 형식
+  {
+    "collectionName" : "사용자 이름"
+  }
+*/
+/* response 형식
+{
+  "manuscripts": [
+      "원고 1",
+      "manuscript two",
+      "One Go 셋"
+  ]
+}
+*/
+app.post("/api/manuscripts", async (req, res) => {
+  const { collectionName } = req.body;
+  console.log(`원고 목록 불러오기 : ${collectionName}`);
+
+  const manuscriptListMdb = new MongodbPersistence(mdbUrl, {
+    collectionName: collectionName,
+    flushSize: 100,
+    multipleCollections: false,
+  });
+
+  const allDocNames = await manuscriptListMdb.getAllDocNames();
+  console.log(allDocNames);
+
+  res.json({ manuscripts: allDocNames });
 });

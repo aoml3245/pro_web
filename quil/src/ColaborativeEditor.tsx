@@ -32,6 +32,9 @@ CommentStringBlot.tagName = "div";
 
 export default function CollaborativeEditor() {
   const quillRef = useRef<ReactQuill | null>(null);
+  const username = "user1_manuscript"; // 사용자 이름
+  const [roomname, setRoomname] = useState<string>("my_room"); // 원고 이름
+  const roomnameInputRef = useRef<HTMLInputElement>(null);
   let [searchValue, setSearchValue] = useState<string>("");
   const [textLength, setTextLength] = useState<number>(0); // State to hold the text length
   const [xy, setXY] = useState({ x: 0, y: 0 });
@@ -42,6 +45,48 @@ export default function CollaborativeEditor() {
     y: 0,
   });
   const [selectedComment, setSelectedComment] = useState<any>();
+
+  function loadManuscriptList() {
+    const url = "http://knuproweb.kro.kr:8080/api/manuscripts"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/api/manuscripts"; // 테스트용 로컬 백엔드 API
+
+    // 사용자 이름 지정
+    const data = {
+      collectionName: username,
+    };
+
+    // 원고 목록 요소 불러와서 비우기
+    const manuscriptList = document.getElementById(
+      "manuscript-list"
+    ) as HTMLDivElement;
+    manuscriptList.innerHTML = "";
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        // 원고 목록 채우기
+        response.manuscripts.forEach((manuscript: string) => {
+          const decodedManuscript = decodeURIComponent(manuscript);
+
+          // <p> 요소 생성
+          const p = document.createElement("p");
+          p.innerHTML = decodedManuscript;
+          p.addEventListener("click", () => {
+            setRoomname(decodedManuscript);
+          });
+
+          manuscriptList.appendChild(p);
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+  window.onload = loadManuscriptList;
 
   useEffect(() => {
     const handleClick = () => setClicked(false);
@@ -57,17 +102,18 @@ export default function CollaborativeEditor() {
     Quill.register(CommentStringBlot);
     // Initialize the Yjs document
     const ydoc = new Y.Doc();
+    const ytext = ydoc.getText("quill");
+
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
-      "wss://knuproweb.kro.kr/api/",
-      // "ws://localhost:8080/",
-      "my_room", // 원고 이름, 이대로 DB에 저장됩니다.
+      "wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
+      //"ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
+      roomname, // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
-    const ytext = ydoc.getText("quill");
-    let binding: any;
 
     // Initialize the Quill editor when the component is mounted
+    let binding: any;
     if (quillRef.current) {
       const editor = quillRef.current.getEditor();
       binding = new QuillBinding(ytext, editor, provider.awareness);
@@ -80,25 +126,6 @@ export default function CollaborativeEditor() {
 
     ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
 
-    // 원고 내용 출력, text
-    const ytextstringBtn = document.getElementById("ytextstring");
-    ytextstringBtn?.addEventListener("click", () => {
-      const string = ytext.toString();
-      const blob = new Blob([string], { type: "text/plain" });
-      const url = URL.createObjectURL(blob);
-
-      const a = document.createElement("a");
-      a.href = url;
-      a.download = "manuscript.txt";
-
-      document.body.appendChild(a);
-      a.click();
-
-      document.body.removeChild(a);
-      URL.revokeObjectURL(url);
-
-      console.log(string);
-    });
     // quillRef.current!.on("contextmenu", () => {});
 
     quillRef.current!.editor?.on(
@@ -143,25 +170,25 @@ export default function CollaborativeEditor() {
       });
     };
 
-    // // 원고 내용 출력, text
-    // const ytextstringBtn = document.getElementById("ytextstring");
-    // ytextstringBtn?.addEventListener("click", () => {
-    //   const string = ytext.toString();
-    //   const blob = new Blob([string], { type: "text/plain" });
-    //   const url = URL.createObjectURL(blob);
+    // 원고 내용 출력, text
+    const ytextstringBtn = document.getElementById("ytextstring");
+    ytextstringBtn?.addEventListener("click", () => {
+      const string = ytext.toString();
+      const blob = new Blob([string], { type: "text/plain" });
+      const url = URL.createObjectURL(blob);
 
-    //   const a = document.createElement("a");
-    //   a.href = url;
-    //   a.download = "manuscript.txt";
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = roomname + ".txt";
 
-    //   document.body.appendChild(a);
-    //   a.click();
+      document.body.appendChild(a);
+      a.click();
 
-    //   document.body.removeChild(a);
-    //   URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
 
-    //   console.log(string);
-    // });
+      console.log(string);
+    });
 
     // 원고 내용 출력, 델타 format(JSON 형식)
     const ytextdeltaBtn = document.getElementById("ytextdelta");
@@ -172,7 +199,7 @@ export default function CollaborativeEditor() {
 
       const a = document.createElement("a");
       a.href = url;
-      a.download = "manuscript.json";
+      a.download = roomname + ".json";
 
       document.body.appendChild(a);
       a.click();
@@ -224,7 +251,7 @@ export default function CollaborativeEditor() {
       }
       provider.disconnect();
     };
-  }, []);
+  }, [roomname]);
 
   function getIndicesOf(searchStr: string, totalString: string) {
     let searchStrLen = searchStr.length;
@@ -371,6 +398,17 @@ export default function CollaborativeEditor() {
   ) => {
     console.log(content, delta);
   };
+
+  // roomname(원고) 변경
+  // roomname 값을 바꿉니다. useEffect가 이를 알아채고 다시 실행되어 편집기를 다시 생성합니다.
+  const roonnameSetBtn = document.getElementById("roomname-set-btn");
+  roonnameSetBtn?.addEventListener("click", () => {
+    if (!roomnameInputRef.current) {
+      return;
+    }
+    setRoomname(roomnameInputRef.current.value);
+  });
+
   return (
     <>
       <div
@@ -394,7 +432,7 @@ export default function CollaborativeEditor() {
           <button type="button" id="ytextdelta">
             델타로 출력하기
           </button>
-          <br></br>
+          <br />
           <input type="file" id="fileInput" accept=".json"></input>
           <button type="button" id="quillset">
             델타 불러오기
@@ -402,6 +440,19 @@ export default function CollaborativeEditor() {
           <button type="button" onClick={commenting}>
             코멘트 달기
           </button>
+        </p>
+        <p>
+          <input
+            type="text"
+            id="roomname"
+            ref={roomnameInputRef}
+            defaultValue={roomname}
+          />
+          <button type="button" id="roomname-set-btn">
+            원고 이름 지정
+          </button>
+          <br />
+          {roomname}
         </p>
 
         <div
@@ -431,6 +482,8 @@ export default function CollaborativeEditor() {
           </ul>
         </div>
       )}
+      <h3 onClick={loadManuscriptList}>원고 목록</h3>
+      <div id="manuscript-list" />
     </>
   );
 }
