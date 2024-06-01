@@ -47,7 +47,7 @@ export default function CollaborativeEditor() {
   const [selectedComment, setSelectedComment] = useState<any>();
 
   function loadManuscriptList() {
-    const url = "http://knuproweb.kro.kr:8080/api/manuscripts"; // 서버 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/api/manuscripts"; // 서버 백엔드 API
     //const url = "http://127.0.0.1:8080/api/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
@@ -86,11 +86,11 @@ export default function CollaborativeEditor() {
       })
       .catch((error) => console.error("Error:", error));
   }
-  window.onload = loadManuscriptList;
 
   useEffect(() => {
     const handleClick = () => setClicked(false);
     document.addEventListener("click", handleClick);
+    loadManuscriptList();
     return () => {
       document.removeEventListener("click", handleClick);
     };

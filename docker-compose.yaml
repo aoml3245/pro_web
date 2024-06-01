@@ -25,6 +25,8 @@ services:
       context: ./ysocket
       # ./velog/Dockerfile을 사용해서 build
       dockerfile: Dockerfile
+    depends_on:
+      - mongodb
   mongodb:
     container_name: "mongodb"
     build:

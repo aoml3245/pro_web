@@ -179,11 +179,9 @@ exports.getYDoc = getYDoc
  * @param {Uint8Array} message
  */
 const messageListener = (conn, doc, message) => {
-  console.log(message);
   try {
     const encoder = encoding.createEncoder()
     const decoder = decoding.createDecoder(message)
-    console.log(decoder);
     const messageType = decoding.readVarUint(decoder)
     switch (messageType) {
       case messageSync:
@@ -194,8 +192,6 @@ const messageListener = (conn, doc, message) => {
         // message, there is no need to send the message. When `encoder` only
         // contains the type of reply, its length is 1.
         if (encoding.length(encoder) > 1) {
-          console.log("encoder: ", encoder);
-          console.log("encoding.toUint8Array(encoder)", encoding.toUint8Array(encoder));
           send(doc, conn, encoding.toUint8Array(encoder))
         }
         break
