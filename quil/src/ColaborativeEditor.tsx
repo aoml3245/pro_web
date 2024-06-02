@@ -48,7 +48,7 @@ export default function CollaborativeEditor() {
 
   function loadManuscriptList() {
     const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/api/manuscripts"; // 테스트용 로컬 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
@@ -59,7 +59,6 @@ export default function CollaborativeEditor() {
     const manuscriptList = document.getElementById(
       "manuscript-list"
     ) as HTMLDivElement;
-    manuscriptList.innerHTML = "";
 
     fetch(url, {
       method: "POST",
@@ -70,6 +69,8 @@ export default function CollaborativeEditor() {
     })
       .then((response) => response.json())
       .then((response) => {
+        manuscriptList.innerHTML = "";
+
         // 원고 목록 채우기
         response.manuscripts.forEach((manuscript: string) => {
           const decodedManuscript = decodeURIComponent(manuscript);
@@ -407,6 +408,7 @@ export default function CollaborativeEditor() {
       return;
     }
     setRoomname(roomnameInputRef.current.value);
+    loadManuscriptList(); // 원고를 추가했을 경우 목록에도 보이도록 새로고침
   });
 
   return (
