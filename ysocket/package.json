@@ -63,6 +63,7 @@
     "express": "^4.19.2",
     "lib0": "^0.2.52",
     "lodash.debounce": "^4.0.8",
+    "minisearch": "^6.3.0",
     "y-mongodb-provider": "^0.1.10",
     "y-protocols": "^1.0.5",
     "y-websocket": "^2.0.3"
