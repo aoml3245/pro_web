@@ -133,9 +133,9 @@ app.post("/manuscripts", async (req, res) => {
 */
 /* response 형식
 {
-    "result": [
+    "results": [
         {
-            "decodedTitle": "엘프의 숲",
+            "title": "엘프의 숲",
             "contexts": [
                 "...는 숲의 중심에 서서 고대의 나무에게 속삭였다....",
                 "...있도록 도와주세요.\"\n고대의 나무는 그녀에게 빛...",
@@ -143,7 +143,7 @@ app.post("/manuscripts", async (req, res) => {
             ]
         },
         {
-            "decodedTitle": "마법사의 제자",
+            "title": "마법사의 제자",
             "contexts": [
                 "루카스는 고대의 마법 책을 들여다보..."
             ]
@@ -208,7 +208,7 @@ app.post("/entire-search", async (req, res) => {
         indexOfSearchWord + searchWord.length + contextLength
       );
 
-      let context = content.substring(startIndex, endIndex);
+      let context = content.substring(startIndex, endIndex).replace(/\n/g, " "); // 주변 문맥까지 포함해서 추출, 줄바꿈은 띄어쓰기로 바꿈
       if (indexOfSearchWord - contextLength > 0) context = "..." + context;
       if (
         indexOfSearchWord + searchWord.length + contextLength <
