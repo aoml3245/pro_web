@@ -133,6 +133,7 @@ app.post("/manuscripts", async (req, res) => {
 */
 /* response 형식
 {
+    "searchWord": "고대",
     "results": [
         {
             "title": "엘프의 숲",
@@ -222,5 +223,5 @@ app.post("/entire-search", async (req, res) => {
   });
 
   console.log("검색 개수 : ", result.length);
-  res.json({ results: result });
+  res.json({ searchWord, results: result });
 });
