@@ -99,7 +99,7 @@ server.listen(port, () => {
   ]
 }
 */
-app.post("/api/manuscripts", async (req, res) => {
+app.post("/manuscripts", async (req, res) => {
   const { collectionName } = req.body;
   console.log(`원고 목록 불러오기 : ${collectionName}`);
 

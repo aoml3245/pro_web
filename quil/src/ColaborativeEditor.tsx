@@ -47,7 +47,7 @@ export default function CollaborativeEditor() {
   const [selectedComment, setSelectedComment] = useState<any>();
 
   function loadManuscriptList() {
-    const url = "https://knuproweb.kro.kr/api/api/manuscripts"; // 서버 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
     //const url = "http://127.0.0.1:8080/api/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
