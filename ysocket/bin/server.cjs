@@ -19,8 +19,8 @@ const server = http.createServer(app);
 const host = "localhost";
 const port = number.parseInt("8080");
 
-//const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
-const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 테스트용 로컬 DB  URL
+const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
+//const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 테스트용 로컬 DB  URL
 
 wss.on("connection", yUtils.setupWSConnection);
 
