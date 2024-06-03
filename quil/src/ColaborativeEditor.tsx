@@ -46,20 +46,20 @@ export default function CollaborativeEditor() {
   });
   const [selectedComment, setSelectedComment] = useState<any>();
 
+  // 원고 목록 불러오기
   function loadManuscriptList() {
-    const url = "https://knuproweb.kro.kr/api/api/manuscripts"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/api/manuscripts"; // 테스트용 로컬 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
       collectionName: username,
     };
 
-    // 원고 목록 요소 불러와서 비우기
+    // 원고 목록 요소 불러오기
     const manuscriptList = document.getElementById(
       "manuscript-list"
     ) as HTMLDivElement;
-    manuscriptList.innerHTML = "";
 
     fetch(url, {
       method: "POST",
@@ -70,18 +70,90 @@ export default function CollaborativeEditor() {
     })
       .then((response) => response.json())
       .then((response) => {
+        // 원고 목록 비우기
+        manuscriptList.innerHTML = "";
+
         // 원고 목록 채우기
         response.manuscripts.forEach((manuscript: string) => {
-          const decodedManuscript = decodeURIComponent(manuscript);
-
           // <p> 요소 생성
           const p = document.createElement("p");
-          p.innerHTML = decodedManuscript;
+          p.innerHTML = manuscript;
           p.addEventListener("click", () => {
-            setRoomname(decodedManuscript);
+            setRoomname(manuscript);
           });
 
           manuscriptList.appendChild(p);
+        });
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+
+  // 통합 검색 결과 가져오기
+  function entireSearch(entireSearchWord: string) {
+    const url = "https://knuproweb.kro.kr/api/entire-search"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/entire-search"; // 테스트용 로컬 백엔드 API
+
+    // 사용자 이름, 검색어 지정
+    const data = {
+      collectionName: username,
+      searchWord: entireSearchWord,
+    };
+
+    // 통합 검색 요소 가져오기
+    const entireSearchResult = document.getElementById(
+      "entire-search-result"
+    ) as HTMLDivElement;
+
+    // 원고 내 검색 요소 가져오기
+    const searchInput = document.getElementById(
+      "search-input"
+    ) as HTMLInputElement;
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        // 통합 검색 결과 비우기
+        entireSearchResult.innerHTML = "";
+
+        // 통합 검색 결과 채우기 // any를 사용하기 싫다면 interface를 만들어야 합니다...
+        response.results.forEach((result: any) => {
+          const div = document.createElement("div");
+          div.addEventListener("click", () => {
+            // 선택한 원고 열기
+            setRoomname(result.title);
+
+            // 에디터에 표시하기, 에디터 로딩 될 때까지 재시도
+            let attempt = 0;
+            const editorMarking = setInterval(() => {
+              if (quillRef?.current) {
+                searchInput.value = response.searchWord;
+                searchInEditor(response.searchWord);
+                clearInterval(editorMarking);
+              }
+              if (++attempt == 10) clearInterval(editorMarking);
+            }, 200); // 0.2초마다 실행, 최대 10번 시도
+          });
+
+          // 원고 이름
+          const h4 = document.createElement("h4");
+          h4.textContent = result.title;
+          h4.style.marginTop = "50px";
+          div.appendChild(h4);
+
+          // 문맥
+          result.contexts.forEach((context: string) => {
+            const p = document.createElement("p");
+            p.textContent = context;
+            div.appendChild(p);
+          });
+
+          entireSearchResult.appendChild(div);
         });
       })
       .catch((error) => console.error("Error:", error));
@@ -244,6 +316,16 @@ export default function CollaborativeEditor() {
       }
     });
 
+    const entireSearchBtn = document.getElementById("entire-search-btn");
+    entireSearchBtn?.addEventListener("click", () => {
+      const entireSearchInput = document.getElementById(
+        "entire-search-input"
+      ) as HTMLInputElement;
+      entireSearch(entireSearchInput.value);
+
+      console.log("통합 검색 : ", entireSearchInput.value);
+    });
+
     // Cleanup function
     return () => {
       if (binding) {
@@ -266,13 +348,19 @@ export default function CollaborativeEditor() {
     }
     return indices;
   }
+
   const onSearch = (e: React.FormEvent<HTMLInputElement>) => {
     const newValue = e.currentTarget.value;
-    setSearchValue(newValue);
+    searchInEditor(newValue);
+  };
+
+  function searchInEditor(searchStr: string) {
+    setSearchValue(searchStr);
+    console.log(searchStr);
 
     const editor = quillRef.current!.getEditor();
     editor.formatText(0, editor.getText().length, searchRandName, false);
-    const SearchedString = newValue;
+    const SearchedString = searchStr;
 
     let totalText = editor.getText();
     let re = new RegExp(`${SearchedString}`, "gi");
@@ -287,7 +375,7 @@ export default function CollaborativeEditor() {
         editor.formatText(index, length, searchRandName, true)
       );
     }
-  };
+  }
 
   const commenting = () => {
     const editor = quillRef.current!.getEditor();
@@ -407,6 +495,7 @@ export default function CollaborativeEditor() {
       return;
     }
     setRoomname(roomnameInputRef.current.value);
+    loadManuscriptList(); // 원고를 추가했을 경우 목록에도 보이도록 새로고침
   });
 
   return (
@@ -482,8 +571,22 @@ export default function CollaborativeEditor() {
           </ul>
         </div>
       )}
-      <h3 onClick={loadManuscriptList}>원고 목록</h3>
-      <div id="manuscript-list" />
+      <div style={{ display: "flex", justifyContent: "space-around" }}>
+        <div style={{ textAlign: "center" }}>
+          <h3 onClick={loadManuscriptList}>원고 목록</h3>
+          <div id="manuscript-list" />
+        </div>
+        <div style={{ textAlign: "center" }}>
+          <h3>통합 검색</h3>
+          <input
+            type="entire-search"
+            placeholder="검색어를 입력하세요"
+            id="entire-search-input"
+          />
+          <button id="entire-search-btn">find</button>
+          <div id="entire-search-result" />
+        </div>
+      </div>
     </>
   );
 }
