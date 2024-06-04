@@ -40,3 +40,8 @@ services:
       # - MONGODB_INITDB_ROOT_USERNAME=test
       # - MONGODB_INITDB_ROOT_PASSWORD=test
       - MONGODB_INITDB_DATABASE=proweb
+  spellcheck:
+    container_name: "spellcheck"
+    build:
+      context: ./spell_check
+      dockerfile: Dockerfile
