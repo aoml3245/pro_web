@@ -4,6 +4,7 @@ import "react-quill/dist/quill.snow.css";
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill"; // Make sure this is correctly imported
+import axios from "axios";
 
 const Inline = Quill.import("blots/inline");
 
@@ -45,6 +46,7 @@ export default function CollaborativeEditor() {
     y: 0,
   });
   const [selectedComment, setSelectedComment] = useState<any>();
+  const [grammarCheckResult, setGrammarCheckResult] = useState<any>(null);
 
   // 원고 목록 불러오기
   function loadManuscriptList() {
@@ -487,6 +489,20 @@ export default function CollaborativeEditor() {
     console.log(content, delta);
   };
 
+    // Function to run grammar check
+    const runGrammarCheck = async () => {
+      if (quillRef.current) {
+        const editor = quillRef.current.getEditor();
+        const text = editor.getText();
+        try {
+          const response = await axios.post('http://localhost:5000/spell_check', { text });
+          setGrammarCheckResult(response.data);
+        } catch (error) {
+          console.error("Error during grammar check:", error);
+        }
+      }
+    };
+
   // roomname(원고) 변경
   // roomname 값을 바꿉니다. useEffect가 이를 알아채고 다시 실행되어 편집기를 다시 생성합니다.
   const roonnameSetBtn = document.getElementById("roomname-set-btn");
@@ -571,6 +587,9 @@ export default function CollaborativeEditor() {
           </ul>
         </div>
       )}
+      <h3 onClick={loadManuscriptList}>원고 목록</h3>
+      <div id="manuscript-list" />
+      
       <div style={{ display: "flex", justifyContent: "space-around" }}>
         <div style={{ textAlign: "center" }}>
           <h3 onClick={loadManuscriptList}>원고 목록</h3>
@@ -587,6 +606,18 @@ export default function CollaborativeEditor() {
           <div id="entire-search-result" />
         </div>
       </div>
+        <div>
+      {/* Input fields and buttons */}
+      {/* <input type="text" placeholder="Search..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} /> */}
+      <button onClick={runGrammarCheck}>Run Grammar Check</button>
+      {/* Display grammar check results */}
+      {grammarCheckResult && (
+        <div>
+          <h3>Grammar Check Results:</h3>
+          <pre>{JSON.stringify(grammarCheckResult, null, 2)}</pre>
+        </div>
+      )}
+    </div>
     </>
   );
 }

@@ -1,0 +1,6 @@
+Start the Flask server in the root directory
+
+	python app.py
+
+Then, start the React app:
+	npm start
