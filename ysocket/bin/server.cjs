@@ -7,6 +7,7 @@ const number = require("lib0/number");
 const wss = new WebSocket.Server({ noServer: true });
 const Y = require("yjs");
 const yUtils = require("./utils.cjs");
+const { MongoClient } = require("mongodb");
 const { MongodbPersistence } = require("y-mongodb-provider");
 const MiniSearch = require("minisearch");
 
@@ -19,8 +20,8 @@ const server = http.createServer(app);
 const host = "localhost";
 const port = number.parseInt("8080");
 
-const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
-//const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 테스트용 로컬 DB  URL
+//const mdbUrl = "mongodb://mongodb:27017/webpro"; // 서버 DB URL
+const mdbUrl = "mongodb://127.0.0.1:27017/webpro"; // 테스트용 로컬 DB  URL
 
 wss.on("connection", yUtils.setupWSConnection);
 
@@ -224,4 +225,55 @@ app.post("/entire-search", async (req, res) => {
 
   console.log("검색 개수 : ", result.length);
   res.json({ searchWord, results: result });
+});
+
+// 원고 삭제 api
+// POST /api/manuscript/delete
+/* request 형식
+  {
+    "collectionName" : "사용자 이름"
+    "docName" : "원고 이름"
+  }
+*/
+/* response 형식 (success, no-file, failure)
+{
+  "result": "success"
+}
+*/
+app.post("/manuscript/delete", async (req, res) => {
+  const { collectionName, docName } = req.body;
+  console.log(`원고 삭제하기 : ${collectionName} : ${docName}`);
+
+  let client;
+  try {
+    // y-mongodb-provider, persistence.clearDocument(docName: string) 안 됨
+    // MongoDB 클라이언트 직접 생성해서 연결
+    client = new MongoClient(mdbUrl);
+    await client.connect();
+
+    // collection 연결
+    const db = client.db();
+    const collection = db.collection(collectionName);
+
+    // 원고 삭제하기
+    const deleteResult = await collection.deleteMany({
+      docName: encodeURIComponent(docName),
+    });
+
+    if (deleteResult.deletedCount >= 1) {
+      console.log(`${docName} 원고를 삭제하였습니다.`);
+      res.json({ result: "success" });
+    } else {
+      console.log(`${docName} 존재하지 않음`);
+      res.status(404).json({ result: "no-file" });
+    }
+  } catch (error) {
+    console.error("원고 삭제 도중 에러 발생 : ", error);
+    res.status(500).json({ result: "failure" });
+  } finally {
+    // MongoDB 클라이언트 연결 해제
+    if (client) {
+      await client.close();
+    }
+  }
 });
