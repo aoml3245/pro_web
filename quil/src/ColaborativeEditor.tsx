@@ -34,7 +34,7 @@ CommentStringBlot.tagName = "div";
 export default function CollaborativeEditor() {
   const quillRef = useRef<ReactQuill | null>(null);
   const username = "user1_manuscript"; // 사용자 이름
-  const [roomname, setRoomname] = useState<string>("my_room"); // 원고 이름
+  const [roomname, setRoomname] = useState<string>(getDocNameFromList(1)); // 원고 이름
   const roomnameInputRef = useRef<HTMLInputElement>(null);
   let [searchValue, setSearchValue] = useState<string>("");
   const [textLength, setTextLength] = useState<number>(0); // State to hold the text length
@@ -47,6 +47,37 @@ export default function CollaborativeEditor() {
   });
   const [selectedComment, setSelectedComment] = useState<any>();
   const [grammarCheckResult, setGrammarCheckResult] = useState<any>(null);
+
+  // 원고 목록 중 n번 째 이름 가져오기
+  function getDocNameFromList(index: number): string {
+    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+
+    // 사용자 이름 지정
+    const data = {
+      collectionName: username,
+    };
+
+    let docName = "";
+
+    // 동기식 http 요청
+    const request = new XMLHttpRequest();
+    request.open("POST", url, false);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify(data));
+
+    if (request.status === 200) {
+      const response = JSON.parse(request.responseText);
+      // index가 범위 내에 있으면 docName에 저장
+      if (index <= response.manuscripts.length + 1 && index > 0) {
+        docName = response.manuscripts[index - 1];
+      }
+    } else {
+      console.error("원고 목록 불러오기 실패 : ", request.statusText);
+    }
+
+    return docName;
+  }
 
   // 원고 목록 불러오기
   function loadManuscriptList() {
@@ -77,15 +108,75 @@ export default function CollaborativeEditor() {
 
         // 원고 목록 채우기
         response.manuscripts.forEach((manuscript: string) => {
-          // <p> 요소 생성
           const p = document.createElement("p");
-          p.innerHTML = manuscript;
-          p.addEventListener("click", () => {
+
+          // 원고 이름, 선택 시 해당 원고로 이동
+          const manuscriptDiv = document.createElement("div");
+          manuscriptDiv.innerHTML = manuscript;
+          manuscriptDiv.style.display = "inline-block";
+          manuscriptDiv.addEventListener("click", () => {
             setRoomname(manuscript);
           });
 
+          // 원고 삭제
+          const deleteDiv = document.createElement("div");
+          deleteDiv.innerHTML = "<Strong>삭제</Strong>";
+          deleteDiv.style.display = "inline-block";
+          deleteDiv.style.marginLeft = "30px";
+          deleteDiv.addEventListener("click", () => {
+            deleteManuscript(manuscript);
+          });
+
+          p.appendChild(manuscriptDiv);
+          p.appendChild(deleteDiv);
           manuscriptList.appendChild(p);
         });
+      })
+      .catch((error) => console.error("Error:", error));
+  }
+
+  // 원고 삭제하기
+  function deleteManuscript(docName: String) {
+    const url = "https://knuproweb.kro.kr/api/manuscript/delete"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscript/delete"; // 테스트용 로컬 백엔드 API
+
+    // 사용자 이름 지정
+    const data = {
+      collectionName: username,
+      docName: docName,
+    };
+
+    if (roomname == docName) {
+      alert("편집 중인 원고는 삭제할 수 없습니다.");
+      return;
+    }
+
+    // 열러 있는 문서를 삭제하기 전, 맨 처음 문서로 이동함
+    // DB에서 지우자마자 다시 추가돼버려서 일단 배제했습니다.
+    // if (roomname == docName) {
+    //   let firstDoc = getDocNameFromList(1);
+    //   // 맨 처음 문서를 삭제하는 경우 두 번째 문서로 이동
+    //   if (firstDoc == docName) {
+    //     firstDoc = getDocNameFromList(2);
+    //   }
+    //   setRoomname(firstDoc);
+    // }
+
+    fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
+      .then((response) => response.json())
+      .then((response) => {
+        console.log("삭제 결과 : " + response.result);
+        // 삭제 성공 시 원고 목록 다시 불러오기
+        if (response.result == "success") {
+          alert("삭제되었습니다.");
+          loadManuscriptList();
+        }
       })
       .catch((error) => console.error("Error:", error));
   }
@@ -164,7 +255,6 @@ export default function CollaborativeEditor() {
   useEffect(() => {
     const handleClick = () => setClicked(false);
     document.addEventListener("click", handleClick);
-    loadManuscriptList();
     return () => {
       document.removeEventListener("click", handleClick);
     };
@@ -246,7 +336,7 @@ export default function CollaborativeEditor() {
 
     // 원고 내용 출력, text
     const ytextstringBtn = document.getElementById("ytextstring");
-    ytextstringBtn?.addEventListener("click", () => {
+    const ytextstringFunc = () => {
       const string = ytext.toString();
       const blob = new Blob([string], { type: "text/plain" });
       const url = URL.createObjectURL(blob);
@@ -261,12 +351,14 @@ export default function CollaborativeEditor() {
       document.body.removeChild(a);
       URL.revokeObjectURL(url);
 
+      console.log(roomname, "first");
       console.log(string);
-    });
+    };
+    ytextstringBtn?.addEventListener("click", ytextstringFunc);
 
     // 원고 내용 출력, 델타 format(JSON 형식)
     const ytextdeltaBtn = document.getElementById("ytextdelta");
-    ytextdeltaBtn?.addEventListener("click", () => {
+    const ytextdeltaFunc = () => {
       const delta = JSON.stringify(ytext.toDelta());
       const blob = new Blob([delta], { type: "application/json" });
       const url = URL.createObjectURL(blob);
@@ -283,11 +375,12 @@ export default function CollaborativeEditor() {
 
       console.log(delta);
       // https://quilljs.com/docs/delta/
-    });
+    };
+    ytextdeltaBtn?.addEventListener("click", ytextdeltaFunc);
 
     // 델타 format 가져와서 Quill Editor로 불러오기
     const quillsetBtn = document.getElementById("quillset");
-    quillsetBtn?.addEventListener("click", () => {
+    const quillsetFunc = () => {
       if (quillRef.current) {
         const editor = quillRef.current.getEditor();
         const fileInput = document.getElementById(
@@ -316,17 +409,34 @@ export default function CollaborativeEditor() {
 
         fr.readAsText(file);
       }
-    });
+    };
+    quillsetBtn?.addEventListener("click", quillsetFunc);
 
+    // roomname(원고) 변경
+    // roomname 값을 바꿉니다. useEffect가 이를 알아채고 다시 실행되어 편집기를 다시 생성합니다.
+    const roomnameSetBtn = document.getElementById("roomname-set-btn");
+    const roomnameSetFunc = () => {
+      if (!roomnameInputRef.current) {
+        return;
+      }
+      setRoomname(roomnameInputRef.current.value);
+    };
+    roomnameSetBtn?.addEventListener("click", roomnameSetFunc);
+
+    // 통합 검색 버튼
     const entireSearchBtn = document.getElementById("entire-search-btn");
-    entireSearchBtn?.addEventListener("click", () => {
+    const entireSearchFunc = () => {
       const entireSearchInput = document.getElementById(
         "entire-search-input"
       ) as HTMLInputElement;
       entireSearch(entireSearchInput.value);
 
       console.log("통합 검색 : ", entireSearchInput.value);
-    });
+    };
+    entireSearchBtn?.addEventListener("click", entireSearchFunc);
+
+    // roomname 변경시 원고 목록도 새로고침
+    loadManuscriptList();
 
     // Cleanup function
     return () => {
@@ -334,6 +444,12 @@ export default function CollaborativeEditor() {
         binding.destroy();
       }
       provider.disconnect();
+
+      ytextstringBtn?.removeEventListener("click", ytextstringFunc);
+      ytextdeltaBtn?.removeEventListener("click", ytextdeltaFunc);
+      quillsetBtn?.removeEventListener("click", quillsetFunc);
+      roomnameSetBtn?.removeEventListener("click", roomnameSetFunc);
+      entireSearchBtn?.removeEventListener("click", entireSearchFunc);
     };
   }, [roomname]);
 
@@ -489,34 +605,23 @@ export default function CollaborativeEditor() {
     console.log(content, delta);
   };
 
-    // Function to run grammar check
-    const runGrammarCheck = async () => {
-      if (quillRef.current) {
-        const editor = quillRef.current.getEditor();
-        const text = editor.getText();
-        try {
-          const response = await axios.post(
-            "https://knuproweb.kro.kr/api2/spell_check",
-            { text }
-          );
-          // const response = await axios.post('http://localhost:5000/spell_check', { text });
-          setGrammarCheckResult(response.data);
-        } catch (error) {
-          console.error("Error during grammar check:", error);
-        }
+  // Function to run grammar check
+  const runGrammarCheck = async () => {
+    if (quillRef.current) {
+      const editor = quillRef.current.getEditor();
+      const text = editor.getText();
+      try {
+        const response = await axios.post(
+          "https://knuproweb.kro.kr/api2/spell_check",
+          { text }
+        );
+        // const response = await axios.post('http://localhost:5000/spell_check', { text });
+        setGrammarCheckResult(response.data);
+      } catch (error) {
+        console.error("Error during grammar check:", error);
       }
-    };
-
-  // roomname(원고) 변경
-  // roomname 값을 바꿉니다. useEffect가 이를 알아채고 다시 실행되어 편집기를 다시 생성합니다.
-  const roonnameSetBtn = document.getElementById("roomname-set-btn");
-  roonnameSetBtn?.addEventListener("click", () => {
-    if (!roomnameInputRef.current) {
-      return;
     }
-    setRoomname(roomnameInputRef.current.value);
-    loadManuscriptList(); // 원고를 추가했을 경우 목록에도 보이도록 새로고침
-  });
+  };
 
   return (
     <>
@@ -591,9 +696,7 @@ export default function CollaborativeEditor() {
           </ul>
         </div>
       )}
-      <h3 onClick={loadManuscriptList}>원고 목록</h3>
-      <div id="manuscript-list" />
-      
+
       <div style={{ display: "flex", justifyContent: "space-around" }}>
         <div style={{ textAlign: "center" }}>
           <h3 onClick={loadManuscriptList}>원고 목록</h3>
@@ -610,18 +713,18 @@ export default function CollaborativeEditor() {
           <div id="entire-search-result" />
         </div>
       </div>
-        <div>
-      {/* Input fields and buttons */}
-      {/* <input type="text" placeholder="Search..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} /> */}
-      <button onClick={runGrammarCheck}>Run Grammar Check</button>
-      {/* Display grammar check results */}
-      {grammarCheckResult && (
-        <div>
-          <h3>Grammar Check Results:</h3>
-          <pre>{JSON.stringify(grammarCheckResult, null, 2)}</pre>
-        </div>
-      )}
-    </div>
+      <div>
+        {/* Input fields and buttons */}
+        {/* <input type="text" placeholder="Search..." value={searchValue} onChange={(e) => setSearchValue(e.target.value)} /> */}
+        <button onClick={runGrammarCheck}>Run Grammar Check</button>
+        {/* Display grammar check results */}
+        {grammarCheckResult && (
+          <div>
+            <h3>Grammar Check Results:</h3>
+            <pre>{JSON.stringify(grammarCheckResult, null, 2)}</pre>
+          </div>
+        )}
+      </div>
     </>
   );
 }
