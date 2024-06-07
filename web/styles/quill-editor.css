@@ -1,0 +1,27 @@
+/* styles/quill-editor.css */
+.editor-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+#toolbar {
+  height: 42px;
+  margin-bottom: 20px;
+  align-items: center;
+  width: 100%;
+}
+
+.ql-container {
+  width: 210mm; /* A4 너비 */
+  max-height: calc(100vh - 62px - 42px - 20px); /* A4 높이 - 툴바 높이 */
+  padding: 20px;
+  background-color: white;
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+  border: 1px solid #ccc;
+  overflow-y: auto; /* 세로 스크롤 활성화 */
+}
+
+.ql-editor {
+  min-height: 100%;
+}

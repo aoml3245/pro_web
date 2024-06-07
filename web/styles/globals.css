@@ -1,0 +1,65 @@
+/* Reset 기본 스타일 */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  height: 100%;
+  background-color: #f5f5f5;
+}
+
+.header {
+  width: 100%;
+  height: 62px;
+  background-color: #fff;
+  border-bottom: 1px solid #e8eef7;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+
+.content {
+  display: flex;
+  height: calc(100vh - 62px);
+}
+
+.sidebar1 {
+  width: 65px;
+  background-color: #fff; /* 임시 배경색 */
+  border-right: 1px solid #e8eef7;
+}
+
+.sidebar1-block {
+  height: 50px;
+  width: 65px;
+  background: #ffffff;
+  border-right: 1px solid #e8eef7;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar2 {
+  width: 160px;
+  background: #ffffff;
+  border-right: 1px solid #e8eef7;
+}
+
+.sidebar2-block {
+  height: 42px;
+  width: 160px;
+  background: #ffffff;
+  border-bottom: 1px solid #e8eef7;
+  border-right: 1px solid #e8eef7;
+  display: flex;
+  align-items: center;
+  padding-left: 10px;
+}
+
+.main {
+  width: calc(100% - 65px);
+  background-color: #fff; /* 임시 배경색 */
+  border-right: 1px solid #e8eef7;
+}
