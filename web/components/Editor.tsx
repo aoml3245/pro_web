@@ -26,11 +26,14 @@ const Editor = () => {
         <button className="ql-list" value="ordered"></button>
         <button className="ql-list" value="bullet"></button>
       </div>
-      <ReactQuill
-        ref={quillRef}
-        theme="snow"
-        modules={{ toolbar: "#toolbar" }}
-      />
+      <div>
+        <ReactQuill
+          ref={quillRef}
+          theme="snow"
+          modules={{ toolbar: "#toolbar" }}
+        />
+        // 댓글창
+      </div>
     </div>
   );
 };
