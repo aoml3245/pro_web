@@ -182,6 +182,9 @@ const Editor = () => {
             deleteManuscript(manuscript);
           });
 
+          if (roomname == manuscript) {
+            div.classList.add("selected-manuscript");
+          }
           div.appendChild(manuscriptDiv);
           div.appendChild(deleteDiv);
           manuscriptList.appendChild(div);
