@@ -3,7 +3,7 @@ import Editor from "../components/Editor";
 export default function Home() {
   return (
     <div>
-      <div className="header">현재 원고 : 원고 1 </div>
+      <div className="header" id="manuscript-name" />
 
       <div className="content">
         <div className="sidebar1">
@@ -13,13 +13,16 @@ export default function Home() {
           <div className="sidebar1-block">메모</div>
         </div>
         <div className="sidebar2">
-          <div className="sidebar2-block">
-            <h4>원고</h4>
+          <div
+            className="sidebar2-block"
+            style={{ borderBottom: "3px solid #e8eef7" }}
+          >
+            <h4 id="manuscript-list-title">원고</h4>
+            <button className="add-button" id="manuscript-add" />
           </div>
-          <div className="sidebar2-block">원고 1</div>
+          <div id="manuscript-list" />
         </div>
         <div className="main">
-          // 맞춤법 블럭
           <Editor />
         </div>
       </div>
