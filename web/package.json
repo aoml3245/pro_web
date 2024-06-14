@@ -16,7 +16,8 @@
     "react-quill": "^2.0.0",
     "y-quill": "^1.0.0",
     "y-websocket": "^2.0.3",
-    "yjs": "^13.6.16"
+    "yjs": "^13.6.16",
+    "react-resizable": "^3.0.5"
   },
   "devDependencies": {
     "@types/node": "^20",
