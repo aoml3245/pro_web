@@ -60,6 +60,10 @@ html {
 
 .main {
   width: calc(100% - 65px);
-  background-color: #fff; /* 임시 배경색 */
   border-right: 1px solid #e8eef7;
+  background-color: #e8eef7;
+}
+
+.darken {
+  filter: brightness(50%);
 }

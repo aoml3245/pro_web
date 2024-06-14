@@ -2,6 +2,8 @@ import type { Metadata } from "next";
 import { Inter } from "next/font/google";
 import "../styles/globals.css";
 import "../styles/quill-editor.css";
+import "../styles/search.css";
+import "../styles/Modal.css";
 
 const inter = Inter({ subsets: ["latin"] });
 

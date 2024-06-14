@@ -6,10 +6,12 @@
 }
 
 #toolbar {
+  background-color: white;
   height: 42px;
   margin-bottom: 20px;
   align-items: center;
   width: 100%;
+  border: none;
 }
 
 .ql-container {
