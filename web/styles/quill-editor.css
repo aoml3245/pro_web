@@ -13,15 +13,35 @@
 }
 
 .ql-container {
-  width: 210mm; /* A4 너비 */
+  /* width: 1000%; */
   max-height: calc(100vh - 62px - 42px - 20px); /* A4 높이 - 툴바 높이 */
   padding: 20px;
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
   border: 1px solid #ccc;
   overflow-y: auto; /* 세로 스크롤 활성화 */
+  /* flex: 1; */
+  width: "100%";
+}
+.editor-bottom {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  gap: 10;
+}
+.ql-commented-string {
+  background-color: #f8ff00;
+
+  display: inline;
+}
+.ql-comment-string {
+  display: none;
+}
+
+.comment-section {
+  width: 400px;
 }
 
 .ql-editor {
-  min-height: 100%;
+  width: 100%;
 }
