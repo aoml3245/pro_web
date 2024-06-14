@@ -15,7 +15,7 @@ export default function Home() {
   return (
     <div>
       <div className="header">
-        <div className="header-text">현재 원고 : 원고 1</div>
+        <div className="header-text" id="manuscript-name" />
         <div className="header-buttons">
           <button onClick={openModal} className="search-button">
             검색
