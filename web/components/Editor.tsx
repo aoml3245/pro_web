@@ -124,8 +124,8 @@ const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
 
   // 원고 목록 불러오기
   function loadManuscriptList() {
-    //const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
@@ -183,8 +183,8 @@ const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
 
   // 원고 삭제하기
   function deleteManuscript(docName: String) {
-    //const url = "https://knuproweb.kro.kr/api/manuscript/delete"; // 서버 백엔드 API
-    const url = "http://127.0.0.1:8080/manuscript/delete"; // 테스트용 로컬 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/manuscript/delete"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscript/delete"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
@@ -226,8 +226,8 @@ const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
 
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
-      //"wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
-      "ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
+      "wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
+      //"ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
       roomname, // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );

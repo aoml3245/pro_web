@@ -18,8 +18,8 @@ export default function Home() {
 
   // 원고 목록 중 n번 째 이름 가져오기
   function getDocNameFromList(index: number): string {
-    //const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
