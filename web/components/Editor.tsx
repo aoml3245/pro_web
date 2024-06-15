@@ -1,31 +1,74 @@
 "use client";
 import React, { useEffect, useRef, useState } from "react";
-import ReactQuill, { Quill } from "react-quill";
+import dynamic from "next/dynamic";
 import "react-quill/dist/quill.snow.css";
 
-import CommentSection from "./CommentSectioin";
+import CommentSection from "./CommentSection";
 
-const Inline = Quill.import("blots/inline") as any;
-
-class CommentedStringBlot extends Inline {
-  static blotName = "commented";
-  static className = "ql-commented-string";
-  static tagName = "div";
-}
-
-class CommentStringBlot extends Inline {
-  static blotName = "comment";
-  static className = "ql-comment-string";
-  static tagName = "div";
-}
+const ReactQuill = dynamic(() => import("react-quill"), { ssr: false });
 
 const Editor = () => {
   const quillRef = useRef<ReactQuill | null>(null);
   const [selectedComment, setSelectedComment] = useState<any>();
   const [comments, setComments] = useState<any>([]);
+  const [isClient, setIsClient] = useState(false);
+
+  useEffect(() => {
+    setIsClient(true);
+  }, []);
+
+  useEffect(() => {
+    if (isClient && quillRef.current) {
+      const Quill = require("react-quill").Quill;
+      const Inline = Quill.import("blots/inline");
+
+      class CommentedStringBlot extends Inline {
+        static blotName = "commented";
+        static className = "ql-commented-string";
+        static tagName = "div";
+      }
+
+      class CommentStringBlot extends Inline {
+        static blotName = "comment";
+        static className = "ql-comment-string";
+        static tagName = "div";
+      }
+
+      Quill.register(CommentedStringBlot);
+      Quill.register(CommentStringBlot);
+
+      const editor = quillRef.current.getEditor();
+
+      editor.on("selection-change", (range, oldRange, source) => {
+        if (range) {
+          setSelectedComment(range);
+        }
+      });
+
+      const handleEditorChange = () => {
+        if (typeof document !== "undefined") {
+          let commented = document.getElementsByClassName(
+            "ql-commented-string"
+          );
+          let comments_ = Array.from(commented).map((c) => {
+            let commentedDiv = c as HTMLDivElement;
+            let commentDiv = commentedDiv.nextElementSibling as HTMLDivElement;
+            return {
+              commented: commentedDiv.innerText,
+              comment: commentDiv.innerText,
+            };
+          });
+          setComments(comments_);
+        }
+      };
+
+      editor.on("text-change", handleEditorChange);
+    }
+  }, [isClient, quillRef.current]);
 
   const commenting = () => {
-    const editor = quillRef.current!.getEditor();
+    if (!quillRef.current) return;
+    const editor = quillRef.current.getEditor();
     const selected = quillRef.current?.selection;
     if (
       !selected ||
@@ -52,33 +95,6 @@ const Editor = () => {
     editor.formatText(index_ + length_, comment.length, "comment", true);
     editor.formatText(index_, length_, "commented", true);
   };
-
-  useEffect(() => {
-    quillRef.current!.editor?.on(
-      "selection-change",
-      (range, oldRange, source) => {
-        if (range) {
-          setSelectedComment(range);
-        }
-      }
-    );
-
-    Quill.register(CommentedStringBlot);
-    Quill.register(CommentStringBlot);
-
-    quillRef.current!.onEditorChange = async () => {
-      let commented = document.getElementsByClassName("ql-commented-string");
-      let comments_ = Array.from(commented).map((c) => {
-        let commentedDiv = c as HTMLDivElement;
-        let commentDiv = commentedDiv.nextElementSibling as HTMLDivElement;
-        return {
-          commented: commentedDiv.innerText,
-          comment: commentDiv.innerText,
-        };
-      });
-      setComments(comments_);
-    };
-  });
 
   const handleEditorChange = (
     content: any,
@@ -115,14 +131,16 @@ const Editor = () => {
         <button className="ql-list" value="bullet"></button>
       </div>
       <div className="editor-bottom">
-        <div className="ql-editor">
-          <ReactQuill
-            onChange={handleEditorChange}
-            ref={quillRef}
-            theme="snow"
-            modules={{ toolbar: "#toolbar" }}
-          />
-        </div>
+        {isClient && (
+          <div className="ql-editor">
+            <ReactQuill
+              onChange={handleEditorChange}
+              ref={quillRef}
+              theme="snow"
+              modules={{ toolbar: "#toolbar" }}
+            />
+          </div>
+        )}
         <div className="comment-section">
           <CommentSection
             onComment={commenting}
