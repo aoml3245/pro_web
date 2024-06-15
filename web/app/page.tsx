@@ -2,8 +2,10 @@
 import Editor from "../components/Editor";
 import Modal from "../components/Modal";
 import { useState } from "react";
+
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const username = "user1_manuscript"; // 사용자 이름
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -44,10 +46,10 @@ export default function Home() {
           <div id="manuscript-list" />
         </div>
         <div className="main">
-          <Editor />
+          <Editor username={username} />
         </div>
       </div>
-      <Modal isOpen={isModalOpen} onClose={closeModal} />
+      <Modal isOpen={isModalOpen} onClose={closeModal} username={username} />
     </div>
   );
 }

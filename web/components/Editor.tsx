@@ -5,9 +5,14 @@ import "react-quill/dist/quill.snow.css"; // or 'quill.bubble.css'
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill";
-import CommentSection from "./CommentSectioin";
+import CommentSection from "./CommentSection";
 
-const Editor = () => {
+// 컴포넌트 간 데이터 이동을 위한 props
+interface EditorProps {
+  username: string;
+}
+
+const Editor: React.FC<EditorProps> = ({ username }) => {
   const quillRef = useRef<ReactQuill | null>(null);
   const [selectedComment, setSelectedComment] = useState<any>();
   const [comments, setComments] = useState<any>([]);
@@ -105,7 +110,7 @@ const Editor = () => {
     console.log(content, delta);
   };
 
-  const username = "user1_manuscript"; // 사용자 이름
+  //const username = "user1_manuscript"; // 사용자 이름
   const [roomname, setRoomname] = useState<string>(getDocNameFromList(1)); // 원고 이름
   const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
 
@@ -120,8 +125,8 @@ const Editor = () => {
 
   // 원고 목록 중 n번 째 이름 가져오기
   function getDocNameFromList(index: number): string {
-    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+    //const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
@@ -151,8 +156,8 @@ const Editor = () => {
 
   // 원고 목록 불러오기
   function loadManuscriptList() {
-    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+    //const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
@@ -177,22 +182,23 @@ const Editor = () => {
         // 원고 목록 비우기
         manuscriptList.innerHTML = "";
 
-        // 원고 목록 채우기
+        // 원고 목록 채우기, 선택 시 해당 원고로 이동
         response.manuscripts.forEach((manuscript: string) => {
           const div = document.createElement("div");
           div.className = "sidebar2-block";
-
-          // 원고 이름, 선택 시 해당 원고로 이동
-          const manuscriptDiv = document.createElement("div");
-          manuscriptDiv.innerHTML = manuscript;
-          manuscriptDiv.addEventListener("click", () => {
+          div.addEventListener("click", () => {
             setRoomname(manuscript);
           });
+
+          // 원고 이름
+          const manuscriptDiv = document.createElement("div");
+          manuscriptDiv.innerHTML = manuscript;
 
           // 원고 삭제
           const deleteDiv = document.createElement("div");
           deleteDiv.className = "delete-button";
-          deleteDiv.addEventListener("click", () => {
+          deleteDiv.addEventListener("click", (event) => {
+            event.stopPropagation();
             deleteManuscript(manuscript);
           });
 
@@ -209,8 +215,8 @@ const Editor = () => {
 
   // 원고 삭제하기
   function deleteManuscript(docName: String) {
-    const url = "https://knuproweb.kro.kr/api/manuscript/delete"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/manuscript/delete"; // 테스트용 로컬 백엔드 API
+    //const url = "https://knuproweb.kro.kr/api/manuscript/delete"; // 서버 백엔드 API
+    const url = "http://127.0.0.1:8080/manuscript/delete"; // 테스트용 로컬 백엔드 API
 
     // 사용자 이름 지정
     const data = {
@@ -242,86 +248,9 @@ const Editor = () => {
       .catch((error) => console.error("Error:", error));
   }
 
-  // 통합 검색 결과 가져오기
-  /*
-  function entireSearch(entireSearchWord: string) {
-    const url = "https://knuproweb.kro.kr/api/entire-search"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/entire-search"; // 테스트용 로컬 백엔드 API
-
-    // 사용자 이름, 검색어 지정
-    const data = {
-      collectionName: username,
-      searchWord: entireSearchWord,
-    };
-
-    // 통합 검색 요소 가져오기
-    const entireSearchResult = document.getElementById(
-      "entire-search-result"
-    ) as HTMLDivElement;
-
-    // 원고 내 검색 요소 가져오기
-    const searchInput = document.getElementById(
-      "search-input"
-    ) as HTMLInputElement;
-
-    fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => response.json())
-      .then((response) => {
-        // 통합 검색 결과 비우기
-        entireSearchResult.innerHTML = "";
-
-        // 통합 검색 결과 채우기 // any를 사용하기 싫다면 interface를 만들어야 합니다...
-        response.results.forEach((result: any) => {
-          const div = document.createElement("div");
-          div.addEventListener("click", () => {
-            // 선택한 원고 열기
-            setRoomname(result.title);
-
-            // 에디터에 표시하기, 에디터 로딩 될 때까지 재시도
-            let attempt = 0;
-            const editorMarking = setInterval(() => {
-              if (quillRef?.current) {
-                searchInput.value = response.searchWord;
-                searchInEditor(response.searchWord);
-                clearInterval(editorMarking);
-              }
-              if (++attempt == 10) clearInterval(editorMarking);
-            }, 200); // 0.2초마다 실행, 최대 10번 시도
-          });
-
-          // 원고 이름
-          const h4 = document.createElement("h4");
-          h4.textContent = result.title;
-          h4.style.marginTop = "50px";
-          div.appendChild(h4);
-
-          // 문맥
-          result.contexts.forEach((context: string) => {
-            const p = document.createElement("p");
-            p.textContent = context;
-            div.appendChild(p);
-          });
-
-          entireSearchResult.appendChild(div);
-        });
-      })
-      .catch((error) => console.error("Error:", error));
-  }
-  */
-
   useEffect(() => {
     // 원고 목록 준비
     loadManuscriptList();
-    // const manuscriptListTitle = document.getElementById(
-    //   "manuscript-list-title"
-    // );
-    // manuscriptListTitle?.addEventListener("click", loadManuscriptList);
 
     // Initialize the Yjs document
     const ydoc = new Y.Doc();
@@ -329,8 +258,8 @@ const Editor = () => {
 
     // Connect to the public Yjs Websocket server using the unique room name
     const provider = new WebsocketProvider(
-      "wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
-      //"ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
+      //"wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
+      "ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
       roomname, // 원고 이름, 이대로 DB에 저장됩니다.
       ydoc
     );
@@ -346,7 +275,6 @@ const Editor = () => {
     const updateTextLength = () => {
       setTextLength(ytext.length);
     };
-
     ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
 
     // 원고 이름 요소
@@ -366,10 +294,9 @@ const Editor = () => {
       }
       provider.disconnect();
 
-      // manuscriptListTitle?.removeEventListener("click", loadManuscriptList);
       manuscriptListAdd?.removeEventListener("click", changeManuscript);
     };
-  }, [roomname]);
+  }, [roomname, quillRef.current]);
 
   return (
     <div className="editor-container">
