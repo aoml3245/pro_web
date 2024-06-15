@@ -6,9 +6,15 @@ interface ModalProps {
   isOpen: boolean;
   onClose: () => void;
   username: string;
+  setRoomname: (roomname: string) => void;
 }
 
-const Modal: React.FC<ModalProps> = ({ isOpen, onClose, username }) => {
+const Modal: React.FC<ModalProps> = ({
+  isOpen,
+  onClose,
+  username,
+  setRoomname,
+}) => {
   if (!isOpen) return null;
   const handleBackgroundClick = (event: React.MouseEvent<HTMLDivElement>) => {
     if (event.target === event.currentTarget) {
@@ -59,12 +65,12 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, username }) => {
         response.results.forEach((result: any) => {
           const div = document.createElement("div");
           div.className = "modal-list-item";
-          /*
           div.addEventListener("click", () => {
             // 선택한 원고 열기
             setRoomname(result.title);
 
-            // 에디터에 표시하기, 에디터 로딩 될 때까지 재시도
+            /*
+            // 원고 내 검색어에 넣기, 에디터 로딩 될 때까지 재시도
             let attempt = 0;
             const editorMarking = setInterval(() => {
               if (quillRef?.current) {
@@ -74,8 +80,9 @@ const Modal: React.FC<ModalProps> = ({ isOpen, onClose, username }) => {
               }
               if (++attempt == 10) clearInterval(editorMarking);
             }, 200); // 0.2초마다 실행, 최대 10번 시도
+            */
+            onClose();
           });
-          */
 
           // 원고 이름
           const titleDiv = document.createElement("div");

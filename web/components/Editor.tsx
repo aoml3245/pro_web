@@ -10,9 +10,12 @@ import CommentSection from "./CommentSection";
 // 컴포넌트 간 데이터 이동을 위한 props
 interface EditorProps {
   username: string;
+  roomname: string;
+  setRoomname: (roomname: string) => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ username }) => {
+const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
+  const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
   const quillRef = useRef<ReactQuill | null>(null);
   const [selectedComment, setSelectedComment] = useState<any>();
   const [comments, setComments] = useState<any>([]);
@@ -110,10 +113,6 @@ const Editor: React.FC<EditorProps> = ({ username }) => {
     console.log(content, delta);
   };
 
-  //const username = "user1_manuscript"; // 사용자 이름
-  const [roomname, setRoomname] = useState<string>(getDocNameFromList(1)); // 원고 이름
-  const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
-
   // 원고 추가(혹은 변경)
   function changeManuscript() {
     const manuscriptName: string | null = prompt("원고 이름을 입력해주세요.");
@@ -121,37 +120,6 @@ const Editor: React.FC<EditorProps> = ({ username }) => {
     if (manuscriptName != null) {
       setRoomname(manuscriptName);
     }
-  }
-
-  // 원고 목록 중 n번 째 이름 가져오기
-  function getDocNameFromList(index: number): string {
-    //const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
-
-    // 사용자 이름 지정
-    const data = {
-      collectionName: username,
-    };
-
-    let docName = "";
-
-    // 동기식 http 요청
-    const request = new XMLHttpRequest();
-    request.open("POST", url, false);
-    request.setRequestHeader("Content-Type", "application/json");
-    request.send(JSON.stringify(data));
-
-    if (request.status === 200) {
-      const response = JSON.parse(request.responseText);
-      // index가 범위 내에 있으면 docName에 저장
-      if (index <= response.manuscripts.length + 1 && index > 0) {
-        docName = response.manuscripts[index - 1];
-      }
-    } else {
-      console.error("원고 목록 불러오기 실패 : ", request.statusText);
-    }
-
-    return docName;
   }
 
   // 원고 목록 불러오기
@@ -297,6 +265,7 @@ const Editor: React.FC<EditorProps> = ({ username }) => {
       manuscriptListAdd?.removeEventListener("click", changeManuscript);
     };
   }, [roomname, quillRef.current]);
+  // roomname이 바뀌면 Editor 전체가 재렌더링 되어서 의미는 없음
 
   return (
     <div className="editor-container">
