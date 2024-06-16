@@ -1,5 +1,6 @@
 "use client";
 import React, {
+  MutableRefObject,
   useEffect,
   useRef,
   useState,
@@ -18,15 +19,16 @@ import { Sources } from "quill";
 
 // 컴포넌트 간 데이터 이동을 위한 props
 interface EditorProps {
+  quillRef: MutableRefObject<ReactQuill | null>;
   username: string;
   roomname: string;
   setRoomname: (roomname: string) => void;
 }
 
 const Editor: React.FC<EditorProps> = forwardRef(
-  ({ username, roomname, setRoomname }, ref) => {
+  ({ username, roomname, setRoomname, quillRef }, ref) => {
     const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
-    const quillRef = useRef<ReactQuill | null>(null);
+    // const quillRef = useRef<ReactQuill | null>(null);
     const [selectedComment, setSelectedComment] = useState<any>();
     const [comments, setComments] = useState<any>([]);
     const [commenteds, setCommenteds] = useState<any>([]);
@@ -161,6 +163,13 @@ const Editor: React.FC<EditorProps> = forwardRef(
       //   };
       // });
       // setComments(comments_);
+    };
+    const insertPlot = (title: string, content: string) => {
+      if (!quillRef.current) return;
+      const editor = quillRef.current.getEditor();
+      editor.focus();
+      const cursorPosition = editor.getSelection()?.index || 0;
+      editor.insertText(cursorPosition, `${title}\n${content}\n`);
     };
 
     useEffect(() => {
