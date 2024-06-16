@@ -4,7 +4,6 @@ import "../styles/globals.css";
 import "../styles/quill-editor.css";
 import "../styles/search.css";
 import "../styles/Modal.css";
-import "../styles/comment.css";
 
 const inter = Inter({ subsets: ["latin"] });
 
