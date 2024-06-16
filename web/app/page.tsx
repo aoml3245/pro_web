@@ -72,7 +72,7 @@ export default function Home() {
             통합 검색
           </button>
           <button onClick={openAccidentModal} className="search-button">
-            사건 검색
+            사건 가져오기
           </button>
         </div>
       </div>
