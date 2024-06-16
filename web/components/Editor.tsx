@@ -153,6 +153,13 @@ const Editor: React.FC<EditorProps> = forwardRef(
       setComments(commentTemp);
       setCommenteds(commentedTemp);
 
+      let commentLength = 0;
+      commentTemp.forEach((element) => {
+        commentLength += element.comment.length;
+      });
+
+      setTextLength(editor.getLength() - commentLength - 1);
+
       // let commented = document.getElementsByClassName("ql-commented-string");
       // let comments_ = Array.from(commented).map((c) => {
       //   let commentedDiv = c as HTMLDivElement;
@@ -388,10 +395,10 @@ const Editor: React.FC<EditorProps> = forwardRef(
       }
 
       // 글자 수 세기
-      const updateTextLength = () => {
-        setTextLength(ytext.length);
-      };
-      ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
+      // const updateTextLength = () => {
+      //   setTextLength(ytext.length);
+      // };
+      // ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
 
       // 원고 이름 요소
       const manuscriptName = document.getElementById(
@@ -503,6 +510,7 @@ const Editor: React.FC<EditorProps> = forwardRef(
             />
           </div>
         </div>
+        <div>Text Length: {textLength}</div>
       </div>
     );
   }
