@@ -61,6 +61,11 @@ const styles = {
   commentContent: {
     marginTop: "10px",
   },
+  commentCollection: {
+    maxHeight: "calc(100vh - 62px - 40px - 20px - 60px - 40px - 56.5px)",
+    overflowY: "auto",
+    overflowX: "hidden",
+  },
 };
 
 interface CommentItemProps {
@@ -137,16 +142,18 @@ const CommentSection: React.FC<CommentSectionProps> = ({
         </button>
       </div>
       {/* Comment List */}
-      {comments.map((c, index) => (
-        <CommentItem
-          key={index}
-          commented={commenteds[index]?.commented ?? ""}
-          comment={c.comment}
-          index={commenteds[index]?.index ?? index}
-          onDelete={onDelete}
-          onEdit={onEdit}
-        />
-      ))}
+      <div style={styles.commentCollection}>
+        {comments.map((c, index) => (
+          <CommentItem
+            key={index}
+            commented={commenteds[index]?.commented ?? ""}
+            comment={c.comment}
+            index={commenteds[index]?.index ?? index}
+            onDelete={onDelete}
+            onEdit={onEdit}
+          />
+        ))}
+      </div>
     </div>
   );
 };

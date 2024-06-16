@@ -3,6 +3,8 @@
   display: flex;
   flex-direction: column;
   align-items: center;
+  position: relative;
+  height: 100%;
 }
 
 #toolbar {
@@ -16,7 +18,7 @@
 
 .ql-container {
   /* width: 1000%; */
-  max-height: calc(100vh - 62px - 42px - 20px); /* A4 높이 - 툴바 높이 */
+  max-height: calc(100vh - 62px - 40px - 20px - 60px - 40px);
   padding: 20px;
   background-color: white;
   box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
@@ -25,19 +27,29 @@
   /* flex: 1; */
   width: "100%";
 }
-.editor-bottom {
+
+.ql-editor {
   width: 100%;
-  display: flex;
-  align-items: flex-start;
-  gap: 10;
 }
+
 .ql-commented-string {
   background-color: #f8ff00;
-
   display: inline;
 }
 .ql-comment-string {
   display: none;
+}
+
+.editor-bottom {
+  width: 100%;
+  display: flex;
+  align-items: flex-start;
+  padding: 20px;
+  gap: 20px;
+}
+
+.ql-container-outside {
+  width: 100%;
 }
 
 .comment-section {
@@ -45,14 +57,12 @@
 }
 
 .textLength-section {
+  position: absolute;
+  bottom: 0;
   width: 100%;
   background-color: white;
   padding: 8px;
   font-size: 14px;
   text-align: center;
   border: none;
-}
-
-.ql-editor {
-  width: 100%;
 }

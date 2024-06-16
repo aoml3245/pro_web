@@ -531,12 +531,13 @@ const Editor: React.FC<EditorProps> = forwardRef(
 
         <div className="editor-bottom">
           {isClient && (
-            <div className="ql-editor">
+            <div className="ql-container-outside">
               <ReactQuill
                 onChange={handleEditorChange}
                 ref={quillRef}
                 theme="snow"
                 modules={{ toolbar: "#toolbar" }}
+                style={{ position: "relative" }}
               />
             </div>
           )}
@@ -550,6 +551,7 @@ const Editor: React.FC<EditorProps> = forwardRef(
             />
           </div>
         </div>
+        <div className="textLength-section">글자 수 : {textLength}자</div>
       </div>
     );
   }
