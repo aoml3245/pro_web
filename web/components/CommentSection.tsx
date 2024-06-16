@@ -55,6 +55,12 @@ const styles = {
     cursor: "pointer",
     marginLeft: "10px",
   },
+  commentTitle: {
+    fontWeight: "bold",
+  },
+  commentContent: {
+    marginTop: "10px",
+  },
 };
 
 interface CommentItemProps {
@@ -101,8 +107,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
         🗑️
       </button>
     </div>
-    <div>{commented}</div>
-    <div>{comment}</div>
+    <div style={styles.commentTitle}>{commented}</div>
+    <div style={styles.commentContent}>{comment}</div>
   </div>
 );
 
