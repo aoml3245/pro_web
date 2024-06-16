@@ -5,7 +5,7 @@ import "react-quill/dist/quill.snow.css"; // or 'quill.bubble.css'
 import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill";
-import CommentSection from "./CommentSectioin";
+import CommentSection from "./CommentSection";
 import Delta from "quill-delta";
 import { DeltaStatic } from "quill";
 import { Sources } from "quill";
