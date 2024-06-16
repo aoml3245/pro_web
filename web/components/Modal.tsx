@@ -24,8 +24,8 @@ const Modal: React.FC<ModalProps> = ({
 
   // // 통합 검색 결과 가져오기
   const entireSearch = () => {
-    //const url = "https://knuproweb.kro.kr/api/entire-search"; // 서버 백엔드 API
-    const url = "http://127.0.0.1:8080/entire-search"; // 테스트용 로컬 백엔드 API
+    const url = "https://knuproweb.kro.kr/api/entire-search"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/entire-search"; // 테스트용 로컬 백엔드 API
 
     // 검색어 요소 가져오기
     const searchWordInput = document.getElementById(
