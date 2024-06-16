@@ -155,6 +155,13 @@ const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
     // });
     // setComments(comments_);
   };
+  const insertPlot = (title: string, content: string) => {
+    if (!quillRef.current) return;
+    const editor = quillRef.current.getEditor();
+    editor.focus();
+    const cursorPosition = editor.getSelection()?.index || 0;
+    editor.insertText(cursorPosition, `${title}\n${content}\n`);
+  };
 
   // 원고 추가(혹은 변경)
   function changeManuscript() {
@@ -198,7 +205,7 @@ const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
 
     return docName;
   }
-  
+
   // 원고 목록 불러오기
   function loadManuscriptList() {
     const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API

@@ -1,34 +1,39 @@
 "use client";
 import Editor from "../components/Editor";
 import Modal from "../components/Modal";
-import { useState } from "react";
+import SearchModalContent from "../components/SearchModalContent";
+import AccidentModalContent from "../components/AccidentModalContent"; // 새로운 컴포넌트 추가
+import { useState, useRef } from "react";
 
 export default function Home() {
-  const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
+  const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
   const username = "user1_manuscript"; // 사용자 이름
   const [roomname, setRoomname] = useState<string>(getDocNameFromList(1));
+  const editorRef = useRef<Editor | null>(null);
 
-  const openModal = () => {
-    setIsModalOpen(true);
+  const openSearchModal = () => {
+    setIsSearchModalOpen(true);
   };
 
-  const closeModal = () => {
-    setIsModalOpen(false);
+  const closeSearchModal = () => {
+    setIsSearchModalOpen(false);
   };
 
-  // 원고 목록 중 n번 째 이름 가져오기
+  const openAccidentModal = () => {
+    setIsAccidentModalOpen(true);
+  };
+
+  const closeAccidentModal = () => {
+    setIsAccidentModalOpen(false);
+  };
+
   function getDocNameFromList(index: number): string {
-    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
-    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
-
-    // 사용자 이름 지정
-    const data = {
-      collectionName: username,
-    };
+    const url = "https://knuproweb.kro.kr/api/manuscripts";
+    const data = { collectionName: username };
 
     let docName = "";
 
-    // 동기식 http 요청
     const request = new XMLHttpRequest();
     request.open("POST", url, false);
     request.setRequestHeader("Content-Type", "application/json");
@@ -36,7 +41,6 @@ export default function Home() {
 
     if (request.status === 200) {
       const response = JSON.parse(request.responseText);
-      // index가 범위 내에 있으면 docName에 저장
       if (index <= response.manuscripts.length + 1 && index > 0) {
         docName = response.manuscripts[index - 1];
       }
@@ -52,16 +56,19 @@ export default function Home() {
       <div className="header">
         <div className="header-text" id="manuscript-name" />
         <div className="header-buttons">
-          <button onClick={openModal} className="search-button">
+          <button onClick={openSearchModal} className="search-button">
             검색
           </button>
-
-          {/* <button onClick={맞춤법 검사 핸들러} className="correct-button">
-            맞춤법 검사
-          </button> */}
+          <button onClick={openAccidentModal} className="search-button">
+            사건 검색
+          </button>
         </div>
       </div>
-      <div className={`content ${isModalOpen ? "darken" : ""}`}>
+      <div
+        className={`content ${
+          isSearchModalOpen || isAccidentModalOpen ? "darken" : ""
+        }`}
+      >
         <div className="sidebar1">
           <div className="sidebar1-block">원고</div>
           <div className="sidebar1-block">플롯</div>
@@ -80,18 +87,26 @@ export default function Home() {
         </div>
         <div className="main">
           <Editor
+            ref={editorRef}
             username={username}
             roomname={roomname}
             setRoomname={setRoomname}
           />
         </div>
       </div>
-      <Modal
-        isOpen={isModalOpen}
-        onClose={closeModal}
-        username={username}
-        setRoomname={setRoomname}
-      />
+      <Modal isOpen={isSearchModalOpen} onClose={closeSearchModal}>
+        <SearchModalContent username={username} setRoomname={setRoomname} />
+      </Modal>
+      <Modal isOpen={isAccidentModalOpen} onClose={closeAccidentModal}>
+        <AccidentModalContent
+          insertPlot={(title: string, content: string) => {
+            if (editorRef.current) {
+              editorRef.current.insertPlot(title, content);
+            }
+            closeAccidentModal();
+          }}
+        />
+      </Modal>
     </div>
   );
 }
