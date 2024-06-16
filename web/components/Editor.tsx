@@ -6,11 +6,15 @@ import * as Y from "yjs";
 import { WebsocketProvider } from "y-websocket";
 import { QuillBinding } from "y-quill";
 import CommentSection from "./CommentSectioin";
+import Delta from "quill-delta";
+import { DeltaStatic } from "quill";
+import { Sources } from "quill";
 
 const Editor = () => {
   const quillRef = useRef<ReactQuill | null>(null);
   const [selectedComment, setSelectedComment] = useState<any>();
   const [comments, setComments] = useState<any>([]);
+  const [commenteds, setCommenteds] = useState<any>([]);
   const [isClient, setIsClient] = useState(false);
 
   useEffect(() => {
@@ -34,8 +38,8 @@ const Editor = () => {
         static tagName = "div";
       }
 
-      Quill.register(CommentedStringBlot);
-      Quill.register(CommentStringBlot);
+      Quill.register(CommentedStringBlot, true);
+      Quill.register(CommentStringBlot, true);
 
       const editor = quillRef.current.getEditor();
 
@@ -45,24 +49,24 @@ const Editor = () => {
         }
       });
 
-      const handleEditorChange = () => {
-        if (typeof document !== "undefined") {
-          let commented = document.getElementsByClassName(
-            "ql-commented-string"
-          );
-          let comments_ = Array.from(commented).map((c) => {
-            let commentedDiv = c as HTMLDivElement;
-            let commentDiv = commentedDiv.nextElementSibling as HTMLDivElement;
-            return {
-              commented: commentedDiv.innerText,
-              comment: commentDiv.innerText,
-            };
-          });
-          setComments(comments_);
-        }
-      };
+      // const handleEditorChange = () => {
+      //   if (typeof document !== "undefined") {
+      //     let commented = document.getElementsByClassName(
+      //       "ql-commented-string"
+      //     );
+      //     let comments_ = Array.from(commented).map((c) => {
+      //       let commentedDiv = c as HTMLDivElement;
+      //       let commentDiv = commentedDiv.nextElementSibling as HTMLDivElement;
+      //       return {
+      //         commented: commentedDiv.innerText,
+      //         comment: commentDiv.innerText,
+      //       };
+      //     });
+      //     setComments(comments_);
+      //   }
+      // };
 
-      editor.on("text-change", handleEditorChange);
+      // editor.on("text-change", handleEditorChange);
     }
   }, [isClient, quillRef.current]);
 
@@ -95,14 +99,53 @@ const Editor = () => {
     editor.formatText(index_ + length_, comment.length, "comment", true);
     editor.formatText(index_, length_, "commented", true);
   };
-
   const handleEditorChange = (
-    content: any,
-    delta: any,
-    source: any,
-    editor: any
+    value: string,
+    delta: DeltaStatic,
+    source: Sources,
+    editor: ReactQuill.UnprivilegedEditor
   ) => {
-    console.log(content, delta);
+    let i = 0;
+    let commentTemp: {
+      index: number;
+      comment: string;
+    }[] = [];
+
+    let commentedTemp: {
+      index: number;
+      commented: string;
+    }[] = [];
+    editor.getContents().ops.forEach((o: any) => {
+      if (o.attributes !== null && o.attributes !== undefined) {
+        if (o.attributes.comment) {
+          commentTemp.push({ index: i, comment: "" });
+          let c = commentTemp.pop();
+          c!.comment = o.insert;
+          commentTemp.push(c!);
+        }
+        if (o.attributes.commented) {
+          commentedTemp.push({ index: i, commented: o.insert });
+        }
+      }
+      i += o.insert.length;
+    });
+
+    commentTemp.sort((a, b) => a.index - b.index);
+    commentedTemp.sort((a, b) => a.index - b.index);
+
+    setComments(commentTemp);
+    setCommenteds(commentedTemp);
+
+    // let commented = document.getElementsByClassName("ql-commented-string");
+    // let comments_ = Array.from(commented).map((c) => {
+    //   let commentedDiv = c as HTMLDivElement;
+    //   let commentDiv = commentedDiv.nextElementSibling as HTMLDivElement;
+    //   return {
+    //     commented: commentedDiv.innerText,
+    //     comment: commentDiv.innerText,
+    //   };
+    // });
+    // setComments(comments_);
   };
 
   const username = "user1_manuscript"; // 사용자 이름
@@ -118,6 +161,9 @@ const Editor = () => {
     }
   }
 
+  useEffect(() => {
+    console.log(comments);
+  }, [comments, commenteds]);
   // 원고 목록 중 n번 째 이름 가져오기
   function getDocNameFromList(index: number): string {
     const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
@@ -371,6 +417,43 @@ const Editor = () => {
     };
   }, [roomname]);
 
+  const editComment = (index: number, commented: string, comment: string) => {
+    const editor = quillRef.current!.getEditor();
+
+    const index_ = index;
+    const leafStartPoint = index;
+    const leafLength = commented.length;
+    const commentLength = comment.length;
+
+    editor.deleteText(leafStartPoint + leafLength, commentLength);
+    editor.formatText(leafStartPoint, leafLength, "commented", false);
+
+    const newComment = prompt("what is your comment");
+    if (!newComment) return;
+
+    editor.insertText(leafStartPoint + leafLength, newComment);
+    editor.formatText(
+      leafStartPoint + leafLength,
+      newComment.length,
+      "comment",
+      true
+    );
+    editor.formatText(leafStartPoint, leafLength, "commented", true);
+  };
+
+  const deleteComment = (index: number, commented: string, comment: string) => {
+    const editor = quillRef.current!.getEditor();
+    if (!selectedComment) return;
+
+    const leafStartPoint = index;
+    const leafLength = commented.length;
+    const commentLength = comment.length;
+    console.log(leafStartPoint, leafLength, commentLength);
+
+    editor.deleteText(leafStartPoint + leafLength, commentLength);
+    editor.formatText(leafStartPoint, leafLength, "commented", false);
+  };
+
   return (
     <div className="editor-container">
       <div id="toolbar">
@@ -412,8 +495,9 @@ const Editor = () => {
           <CommentSection
             onComment={commenting}
             comments={comments}
-            // onEdit={editComment}
-            // onDelete={deleteComment}
+            commenteds={commenteds}
+            onEdit={editComment}
+            onDelete={deleteComment}
           />
         </div>
       </div>

@@ -2,34 +2,26 @@ import React from "react";
 import "react-quill/dist/quill.snow.css";
 
 interface CommentItemProps {
-  content: string;
-  status: string;
-  author: string;
-  avatar: string;
-  timestamp: string;
+  commented: string;
+  comment: string;
 }
 
 interface CommentSectionProps {
   comments: Array<any>;
+  commenteds: Array<any>;
   onComment: () => void;
 }
 
 const CommentItem: React.FC<CommentItemProps> = ({
-  content,
-  status,
-  author,
-  avatar,
-  timestamp,
+  comment,
+  commented,
+  // author,
+  // avatar,
+  // timestamp,
 }) => (
   <div className="commentBox">
     <div className="commentHeader">
-      <div className="commentAuthor">
-        <img src={avatar} alt="author avatar" />
-        <div>
-          <div className="authorName">{author}</div>
-          <div className="timestamp">{timestamp}</div>
-        </div>
-      </div>
+      <div className="commentAuthor"></div>
       <div>
         <button className="button" title="Edit">
           ✏️
@@ -39,14 +31,15 @@ const CommentItem: React.FC<CommentItemProps> = ({
         </button>
       </div>
     </div>
-    <div className="commentContent">{content}</div>
-    <div className="commentFooter">{status}</div>
+    <div className="commentContent">{commented}</div>
+    <div className="commentFooter">{comment}</div>
   </div>
 );
 
 const CommentSection: React.FC<CommentSectionProps> = ({
   onComment,
   comments,
+  commenteds,
 }) => {
   const handleAddComment = () => {
     onComment();
@@ -68,12 +61,9 @@ const CommentSection: React.FC<CommentSectionProps> = ({
       {/* Comment List */}
       {comments.map((c, index) => (
         <CommentItem
-          key={index}
-          content={c.commented}
-          status={c.comment}
-          author={c.author}
-          avatar={c.avatar}
-          timestamp={c.timestamp}
+          key={c.index}
+          commented={commenteds[index].commented}
+          comment={c.comment}
         />
       ))}
     </div>
