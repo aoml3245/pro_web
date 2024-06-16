@@ -1,5 +1,5 @@
 "use client";
-import React, { useEffect, useRef, useState } from "react";
+import React, { MutableRefObject, useEffect, useRef, useState } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css"; // or 'quill.bubble.css'
 import * as Y from "yjs";
@@ -12,14 +12,20 @@ import { Sources } from "quill";
 
 // 컴포넌트 간 데이터 이동을 위한 props
 interface EditorProps {
+  quillRef: MutableRefObject<ReactQuill | null>;
   username: string;
   roomname: string;
   setRoomname: (roomname: string) => void;
 }
 
-const Editor: React.FC<EditorProps> = ({ username, roomname, setRoomname }) => {
+const Editor: React.FC<EditorProps> = ({
+  username,
+  roomname,
+  setRoomname,
+  quillRef,
+}) => {
   const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
-  const quillRef = useRef<ReactQuill | null>(null);
+  // const quillRef = useRef<ReactQuill | null>(null);
   const [selectedComment, setSelectedComment] = useState<any>();
   const [comments, setComments] = useState<any>([]);
   const [commenteds, setCommenteds] = useState<any>([]);

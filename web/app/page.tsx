@@ -3,14 +3,17 @@ import Editor from "../components/Editor";
 import Modal from "../components/Modal";
 import SearchModalContent from "../components/SearchModalContent";
 import AccidentModalContent from "../components/AccidentModalContent"; // 새로운 컴포넌트 추가
-import { useState, useRef } from "react";
+import { useState, useRef, MutableRefObject } from "react";
+import ReactQuill from "react-quill";
 
 export default function Home() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
   const username = "user1_manuscript"; // 사용자 이름
   const [roomname, setRoomname] = useState<string>(getDocNameFromList(1));
-  const editorRef = useRef<Editor | null>(null);
+  const quillRef: MutableRefObject<ReactQuill | null> =
+    useRef<ReactQuill | null>(null);
+  // const editorRef = useRef<Editor | null>(null);
 
   const openSearchModal = () => {
     setIsSearchModalOpen(true);
@@ -87,7 +90,8 @@ export default function Home() {
         </div>
         <div className="main">
           <Editor
-            ref={editorRef}
+            quillRef={quillRef}
+            // ref={editorRef}
             username={username}
             roomname={roomname}
             setRoomname={setRoomname}
@@ -100,9 +104,9 @@ export default function Home() {
       <Modal isOpen={isAccidentModalOpen} onClose={closeAccidentModal}>
         <AccidentModalContent
           insertPlot={(title: string, content: string) => {
-            if (editorRef.current) {
-              editorRef.current.insertPlot(title, content);
-            }
+            let editor = quillRef.current?.getEditor();
+            editor?.insertText(editor.getLength(), title);
+            editor?.insertText(editor.getLength(), content);
             closeAccidentModal();
           }}
         />

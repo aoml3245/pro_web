@@ -114,6 +114,7 @@ const AccidentModalContent: React.FC<AccidentModalContentProps> = ({
       const div = document.createElement("div");
       div.className = "modal-list-item";
       div.addEventListener("click", () => {
+        console.log("test");
         insertPlot(plot.title, plot.content); // 선택한 사건을 에디터에 삽입
       });
 
