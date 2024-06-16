@@ -10,10 +10,10 @@ export default function Home() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
   const username = "user1_manuscript"; // 사용자 이름
-  const [roomname, setRoomname] = useState<string>(getDocNameFromList(1));
+  const [roomname, setRoomname] = useState<string>("");
   const editorRef = useRef(null);
-  const quillRef: MutableRefObject<ReactQuill | null> =
-    useRef<ReactQuill | null>(null);
+  // const quillRef: MutableRefObject<ReactQuill | null> =
+  //   useRef<ReactQuill | null>(null);
 
   const openSearchModal = () => {
     setIsSearchModalOpen(true);
@@ -36,29 +36,6 @@ export default function Home() {
   const closeAccidentModal = () => {
     setIsAccidentModalOpen(false);
   };
-
-  function getDocNameFromList(index: number): string {
-    const url = "https://knuproweb.kro.kr/api/manuscripts";
-    const data = { collectionName: username };
-
-    let docName = "";
-
-    const request = new XMLHttpRequest();
-    request.open("POST", url, false);
-    request.setRequestHeader("Content-Type", "application/json");
-    request.send(JSON.stringify(data));
-
-    if (request.status === 200) {
-      const response = JSON.parse(request.responseText);
-      if (index <= response.manuscripts.length + 1 && index > 0) {
-        docName = response.manuscripts[index - 1];
-      }
-    } else {
-      console.error("원고 목록 불러오기 실패 : ", request.statusText);
-    }
-
-    return docName;
-  }
 
   return (
     <div>
@@ -100,7 +77,6 @@ export default function Home() {
         <div className="main">
           <Editor
             ref={editorRef}
-            quillRef={quillRef}
             username={username}
             roomname={roomname}
             setRoomname={setRoomname}
@@ -108,12 +84,16 @@ export default function Home() {
         </div>
       </div>
       <Modal isOpen={isSearchModalOpen} onClose={closeSearchModal}>
-        <SearchModalContent username={username} setRoomname={setRoomname} />
+        <SearchModalContent
+          username={username}
+          setRoomname={setRoomname}
+          closeSearchModal={closeSearchModal}
+        />
       </Modal>
       <Modal isOpen={isAccidentModalOpen} onClose={closeAccidentModal}>
         <AccidentModalContent
           insertPlot={(title: string, content: string) => {
-            let editor = quillRef.current?.getEditor();
+            let editor = editorRef.current?.getQuillEditor();
             editor?.insertText(editor.getLength(), title);
             editor?.insertText(editor.getLength(), content);
             closeAccidentModal();

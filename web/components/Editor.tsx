@@ -6,6 +6,7 @@ import React, {
   useState,
   forwardRef,
   useImperativeHandle,
+  use,
 } from "react";
 import ReactQuill, { Quill } from "react-quill";
 import "react-quill/dist/quill.snow.css"; // or 'quill.bubble.css'
@@ -19,20 +20,28 @@ import { Sources } from "quill";
 
 // 컴포넌트 간 데이터 이동을 위한 props
 interface EditorProps {
-  quillRef: MutableRefObject<ReactQuill | null>;
   username: string;
   roomname: string;
   setRoomname: (roomname: string) => void;
 }
 
 const Editor: React.FC<EditorProps> = forwardRef(
-  ({ username, roomname, setRoomname, quillRef }, ref) => {
+  ({ username, roomname, setRoomname }, ref) => {
     const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
-    // const quillRef = useRef<ReactQuill | null>(null);
+    const quillRef = useRef<ReactQuill | null>(null);
     const [selectedComment, setSelectedComment] = useState<any>();
     const [comments, setComments] = useState<any>([]);
     const [commenteds, setCommenteds] = useState<any>([]);
     const [isClient, setIsClient] = useState(false);
+
+    useImperativeHandle(ref, () => ({
+      textExport,
+      getQuillEditor,
+    }));
+
+    const getQuillEditor = () => {
+      return quillRef.current?.getEditor();
+    };
 
     useEffect(() => {
       setIsClient(true);
@@ -84,6 +93,17 @@ const Editor: React.FC<EditorProps> = forwardRef(
         // };
 
         // editor.on("text-change", handleEditorChange);
+
+        // 원고 추가 요소 이벤트 지정
+        const manuscriptListAdd = document.getElementById("manuscript-add");
+        manuscriptListAdd?.addEventListener("click", changeManuscript);
+
+        // 시작 시 첫 원고 열기
+        setRoomname(getDocNameFromList(1));
+
+        return () => {
+          manuscriptListAdd?.removeEventListener("click", changeManuscript);
+        };
       }
     }, [isClient, quillRef.current]);
 
@@ -233,10 +253,6 @@ const Editor: React.FC<EditorProps> = forwardRef(
     //   URL.revokeObjectURL(url);
     // };
 
-    useImperativeHandle(ref, () => ({
-      textExport,
-    }));
-
     // 원고 추가(혹은 변경)
     function changeManuscript() {
       const manuscriptName: string | null = prompt("원고 이름을 입력해주세요.");
@@ -278,9 +294,12 @@ const Editor: React.FC<EditorProps> = forwardRef(
     }
 
     // 원고 목록 불러오기
-    function loadManuscriptList() {
+    async function loadManuscriptList(): Promise<boolean> {
       const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
       //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+
+      // 원고 추가 시 항목이 있는지 확인
+      let found = false;
 
       // 사용자 이름 지정
       const data = {
@@ -291,9 +310,8 @@ const Editor: React.FC<EditorProps> = forwardRef(
       const manuscriptList = document.getElementById(
         "manuscript-list"
       ) as HTMLDivElement;
-      console.log(manuscriptList);
 
-      fetch(url, {
+      await fetch(url, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -302,7 +320,7 @@ const Editor: React.FC<EditorProps> = forwardRef(
       })
         .then((response) => response.json())
         .then((response) => {
-          // 원고 목록 비우기
+          // 원고 목록 요소 비우기
           manuscriptList.innerHTML = "";
 
           // 원고 목록 채우기, 선택 시 해당 원고로 이동
@@ -327,14 +345,36 @@ const Editor: React.FC<EditorProps> = forwardRef(
 
             if (roomname == manuscript) {
               div.classList.add("selected-manuscript");
+              found = true;
             }
             div.appendChild(manuscriptDiv);
             div.appendChild(deleteDiv);
             manuscriptList.appendChild(div);
           });
         })
-        .catch((error) => console.error("Error:", error));
+        .catch((error) => {
+          console.error("Error:", error);
+        });
+
+      return found;
     }
+
+    // 원고 목록에 열린 원고 포함 되어 있을 때까지 시도
+    const tryLoadManuscriptList = async () => {
+      // 최초 시도
+      const initialFound = await loadManuscriptList();
+
+      // 포함 안 되어 있으면 0.5초마다 다시 시도
+      if (!initialFound) {
+        const intervalId = setInterval(async () => {
+          const found = await loadManuscriptList();
+          console.log("목록 불러오기 재시도");
+          if (found) {
+            clearInterval(intervalId);
+          }
+        }, 500);
+      }
+    };
 
     // 원고 삭제하기
     function deleteManuscript(docName: String) {
@@ -372,55 +412,49 @@ const Editor: React.FC<EditorProps> = forwardRef(
     }
 
     useEffect(() => {
-      // 원고 목록 준비
-      loadManuscriptList();
+      if (roomname) {
+        // Initialize the Yjs document
+        const ydoc = new Y.Doc();
+        const ytext = ydoc.getText("quill");
 
-      // Initialize the Yjs document
-      const ydoc = new Y.Doc();
-      const ytext = ydoc.getText("quill");
+        // Connect to the public Yjs Websocket server using the unique room name
+        const provider = new WebsocketProvider(
+          "wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
+          //"ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
+          roomname, // 원고 이름, 이대로 DB에 저장됩니다.
+          ydoc
+        );
 
-      // Connect to the public Yjs Websocket server using the unique room name
-      const provider = new WebsocketProvider(
-        "wss://knuproweb.kro.kr/api/", // 서버 웹소켓 주소
-        //"ws://localhost:8080/", // 테스트용 로컬 웹소켓 주소
-        roomname, // 원고 이름, 이대로 DB에 저장됩니다.
-        ydoc
-      );
-
-      // Initialize the Quill editor when the component is mounted
-      let binding: any;
-      if (quillRef.current) {
-        const editor = quillRef.current.getEditor();
-        binding = new QuillBinding(ytext, editor, provider.awareness);
-      }
-
-      // 글자 수 세기
-      // const updateTextLength = () => {
-      //   setTextLength(ytext.length);
-      // };
-      // ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
-
-      // 원고 이름 요소
-      const manuscriptName = document.getElementById(
-        "manuscript-name"
-      ) as HTMLDivElement;
-      manuscriptName.innerHTML = "현재 원고 : " + roomname;
-
-      // 원고 추가 요소
-      const manuscriptListAdd = document.getElementById("manuscript-add");
-      console.log(manuscriptListAdd);
-      manuscriptListAdd?.addEventListener("click", changeManuscript);
-
-      return () => {
-        if (binding) {
-          binding.destroy();
+        // Initialize the Quill editor when the component is mounted
+        let binding: any;
+        if (quillRef.current) {
+          const editor = quillRef.current.getEditor();
+          binding = new QuillBinding(ytext, editor, provider.awareness);
         }
-        provider.disconnect();
 
-        manuscriptListAdd?.removeEventListener("click", changeManuscript);
-      };
-    }, [roomname, quillRef.current]);
-    // roomname이 바뀌면 Editor 전체가 재렌더링 되어서 의미는 없음
+        // 글자 수 세기
+        // const updateTextLength = () => {
+        //   setTextLength(ytext.length);
+        // };
+        // ytext.observe(updateTextLength); // Update text length whenever the Yjs text changes
+
+        // 원고 이름 요소
+        const manuscriptName = document.getElementById(
+          "manuscript-name"
+        ) as HTMLDivElement;
+        manuscriptName.innerHTML = "현재 원고 : " + roomname;
+
+        // 원고 목록 불러오기 시도
+        tryLoadManuscriptList();
+
+        return () => {
+          if (binding) {
+            binding.destroy();
+          }
+          provider.disconnect();
+        };
+      }
+    }, [roomname]);
 
     const editComment = (index: number, commented: string, comment: string) => {
       const editor = quillRef.current!.getEditor();
@@ -510,7 +544,6 @@ const Editor: React.FC<EditorProps> = forwardRef(
             />
           </div>
         </div>
-        <div>Text Length: {textLength}</div>
       </div>
     );
   }

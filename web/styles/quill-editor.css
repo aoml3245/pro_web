@@ -44,6 +44,15 @@
   width: 400px;
 }
 
+.textLength-section {
+  width: 100%;
+  background-color: white;
+  padding: 8px;
+  font-size: 14px;
+  text-align: center;
+  border: none;
+}
+
 .ql-editor {
   width: 100%;
 }

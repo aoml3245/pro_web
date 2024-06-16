@@ -4,11 +4,13 @@ import React from "react";
 interface SearchModalContentProps {
   username: string;
   setRoomname: (roomname: string) => void;
+  closeSearchModal: () => void;
 }
 
 const SearchModalContent: React.FC<SearchModalContentProps> = ({
   username,
   setRoomname,
+  closeSearchModal,
 }) => {
   const entireSearch = () => {
     const url = "https://knuproweb.kro.kr/api/entire-search";
@@ -40,6 +42,7 @@ const SearchModalContent: React.FC<SearchModalContentProps> = ({
           div.className = "modal-list-item";
           div.addEventListener("click", () => {
             setRoomname(result.title);
+            closeSearchModal();
           });
 
           const titleDiv = document.createElement("div");
