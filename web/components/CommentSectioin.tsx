@@ -101,8 +101,8 @@ const CommentItem: React.FC<CommentItemProps> = ({
         🗑️
       </button>
     </div>
-    <div>{comment}</div>
     <div>{commented}</div>
+    <div>{comment}</div>
   </div>
 );
 
