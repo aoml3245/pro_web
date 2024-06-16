@@ -1,12 +1,13 @@
 "use client";
 import Editor from "../components/Editor";
 import Modal from "../components/Modal";
-import { useState } from "react";
+import { useState, useRef } from "react";
 
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const username = "user1_manuscript"; // 사용자 이름
   const [roomname, setRoomname] = useState<string>(getDocNameFromList(1));
+  const editorRef = useRef(null);
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -14,6 +15,12 @@ export default function Home() {
 
   const closeModal = () => {
     setIsModalOpen(false);
+  };
+
+  const textExport = () => {
+    if (editorRef.current) {
+      editorRef.current.textExport();
+    }
   };
 
   // 원고 목록 중 n번 째 이름 가져오기
@@ -52,8 +59,11 @@ export default function Home() {
       <div className="header">
         <div className="header-text" id="manuscript-name" />
         <div className="header-buttons">
+          <button onClick={textExport} className="search-button">
+            텍스트 내보내기
+          </button>
           <button onClick={openModal} className="search-button">
-            검색
+            통합 검색
           </button>
 
           {/* <button onClick={맞춤법 검사 핸들러} className="correct-button">
@@ -80,6 +90,7 @@ export default function Home() {
         </div>
         <div className="main">
           <Editor
+            ref={editorRef}
             username={username}
             roomname={roomname}
             setRoomname={setRoomname}
