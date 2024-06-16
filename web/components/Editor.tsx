@@ -430,13 +430,19 @@ const Editor: React.FC<EditorProps> = forwardRef(
       const leafLength = commented.length;
       const commentLength = comment.length;
 
-      editor.deleteText(leafStartPoint + leafLength, commentLength);
-      editor.formatText(leafStartPoint, leafLength, "commented", false);
-
       const newComment = prompt("what is your comment");
       if (!newComment) return;
 
+      editor.deleteText(leafStartPoint + leafLength, commentLength);
+      editor.formatText(leafStartPoint, leafLength, "commented", false);
+
       editor.insertText(leafStartPoint + leafLength, newComment);
+      editor.formatText(
+        leafStartPoint + leafLength,
+        newComment.length,
+        "commented",
+        false
+      );
       editor.formatText(
         leafStartPoint + leafLength,
         newComment.length,
