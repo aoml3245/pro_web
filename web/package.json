@@ -14,10 +14,10 @@
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
     "react-quill": "^2.0.0",
+    "react-resizable": "^3.0.5",
     "y-quill": "^1.0.0",
     "y-websocket": "^2.0.3",
-    "yjs": "^13.6.16",
-    "react-resizable": "^3.0.5"
+    "yjs": "^13.6.16"
   },
   "devDependencies": {
     "@types/node": "^20",

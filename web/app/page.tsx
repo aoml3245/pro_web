@@ -2,8 +2,11 @@
 import Editor from "../components/Editor";
 import Modal from "../components/Modal";
 import { useState } from "react";
+
 export default function Home() {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const username = "user1_manuscript"; // 사용자 이름
+  const [roomname, setRoomname] = useState<string>(getDocNameFromList(1));
 
   const openModal = () => {
     setIsModalOpen(true);
@@ -12,6 +15,38 @@ export default function Home() {
   const closeModal = () => {
     setIsModalOpen(false);
   };
+
+  // 원고 목록 중 n번 째 이름 가져오기
+  function getDocNameFromList(index: number): string {
+    const url = "https://knuproweb.kro.kr/api/manuscripts"; // 서버 백엔드 API
+    //const url = "http://127.0.0.1:8080/manuscripts"; // 테스트용 로컬 백엔드 API
+
+    // 사용자 이름 지정
+    const data = {
+      collectionName: username,
+    };
+
+    let docName = "";
+
+    // 동기식 http 요청
+    const request = new XMLHttpRequest();
+    request.open("POST", url, false);
+    request.setRequestHeader("Content-Type", "application/json");
+    request.send(JSON.stringify(data));
+
+    if (request.status === 200) {
+      const response = JSON.parse(request.responseText);
+      // index가 범위 내에 있으면 docName에 저장
+      if (index <= response.manuscripts.length + 1 && index > 0) {
+        docName = response.manuscripts[index - 1];
+      }
+    } else {
+      console.error("원고 목록 불러오기 실패 : ", request.statusText);
+    }
+
+    return docName;
+  }
+
   return (
     <div>
       <div className="header">
@@ -44,10 +79,19 @@ export default function Home() {
           <div id="manuscript-list" />
         </div>
         <div className="main">
-          <Editor />
+          <Editor
+            username={username}
+            roomname={roomname}
+            setRoomname={setRoomname}
+          />
         </div>
       </div>
-      <Modal isOpen={isModalOpen} onClose={closeModal} />
+      <Modal
+        isOpen={isModalOpen}
+        onClose={closeModal}
+        username={username}
+        setRoomname={setRoomname}
+      />
     </div>
   );
 }
