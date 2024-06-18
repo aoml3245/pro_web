@@ -23,12 +23,13 @@ interface EditorProps {
   username: string;
   roomname: string;
   setRoomname: (roomname: string) => void;
+  quillRef: MutableRefObject<ReactQuill | null>;
 }
 
 const Editor: React.FC<EditorProps> = forwardRef(
-  ({ username, roomname, setRoomname }, ref) => {
+  ({ username, roomname, setRoomname, quillRef  }, ref) => {
     const [textLength, setTextLength] = useState<number>(0); // 원고 글자 수
-    const quillRef = useRef<ReactQuill | null>(null);
+    // const quillRef = useRef<ReactQuill | null>(null);
     const [selectedComment, setSelectedComment] = useState<any>();
     const [comments, setComments] = useState<any>([]);
     const [commenteds, setCommenteds] = useState<any>([]);

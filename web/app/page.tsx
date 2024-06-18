@@ -2,18 +2,20 @@
 import Editor from "../components/Editor";
 import Modal from "../components/Modal";
 import SearchModalContent from "../components/SearchModalContent";
-import AccidentModalContent from "../components/AccidentModalContent"; // 새로운 컴포넌트 추가
-import { useState, useRef, MutableRefObject } from "react";
+import AccidentModalContent from "../components/AccidentModalContent";
+import SpellCheckModalContent from "../components/SpellCheckModalContent";
+import { useState, useRef } from "react";
 import ReactQuill from "react-quill";
 
 export default function Home() {
   const [isSearchModalOpen, setIsSearchModalOpen] = useState(false);
   const [isAccidentModalOpen, setIsAccidentModalOpen] = useState(false);
-  const username = "user1_manuscript"; // 사용자 이름
+  const [isSpellCheckModalOpen, setIsSpellCheckModalOpen] = useState(false); // Corrected typo in the state variable name
+  const username = "user1_manuscript";
   const [roomname, setRoomname] = useState<string>("");
   const editorRef = useRef(null);
-  // const quillRef: MutableRefObject<ReactQuill | null> =
-  //   useRef<ReactQuill | null>(null);
+  const quillRef = useRef<ReactQuill>(null);
+
 
   const openSearchModal = () => {
     setIsSearchModalOpen(true);
@@ -21,6 +23,14 @@ export default function Home() {
 
   const closeSearchModal = () => {
     setIsSearchModalOpen(false);
+  };
+
+  const openSpellCheckModal = () => {
+    setIsSpellCheckModalOpen(true);
+  };
+
+  const closeSpellCheckModal = () => {
+    setIsSpellCheckModalOpen(false);
   };
 
   const textExport = () => {
@@ -51,11 +61,14 @@ export default function Home() {
           <button onClick={openAccidentModal} className="search-button">
             사건 가져오기
           </button>
+          <button onClick={openSpellCheckModal} className="search-button">
+            맞춤법 검사
+          </button>
         </div>
       </div>
       <div
         className={`content ${
-          isSearchModalOpen || isAccidentModalOpen ? "darken" : ""
+          isSearchModalOpen || isAccidentModalOpen || isSpellCheckModalOpen ? "darken" : ""
         }`}
       >
         <div className="sidebar1">
@@ -80,6 +93,7 @@ export default function Home() {
             username={username}
             roomname={roomname}
             setRoomname={setRoomname}
+            quillRef={quillRef}
           />
         </div>
       </div>
@@ -98,6 +112,12 @@ export default function Home() {
             editor?.insertText(editor.getLength(), content);
             closeAccidentModal();
           }}
+        />
+      </Modal>
+      <Modal isOpen={isSpellCheckModalOpen} onClose={closeSpellCheckModal}>
+        <SpellCheckModalContent 
+        quillRef={quillRef} 
+        closeSpellCheckModal={closeSpellCheckModal}
         />
       </Modal>
     </div>
