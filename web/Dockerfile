@@ -5,5 +5,6 @@ WORKDIR /home/node/app
 COPY --chown=node:node . .
 USER node
 RUN npm install
+RUN npm install axios
 EXPOSE 3000
 CMD [ "npm", "run", "dev" ]

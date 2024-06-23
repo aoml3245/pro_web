@@ -11,6 +11,7 @@ services:
     depends_on:
       - quil
       - ysocket
+    restart: always
   quil:
     container_name: "quil"
     build:
@@ -18,6 +19,7 @@ services:
       context: ./quil
       # ./velog/Dockerfile을 사용해서 build
       dockerfile: Dockerfile
+    restart: always
   ysocket:
     container_name: "ysocket"
     build:
@@ -27,6 +29,7 @@ services:
       dockerfile: Dockerfile
     depends_on:
       - mongodb
+    restart: always
   mongodb:
     container_name: "mongodb"
     build:
@@ -40,14 +43,17 @@ services:
       # - MONGODB_INITDB_ROOT_USERNAME=test
       # - MONGODB_INITDB_ROOT_PASSWORD=test
       - MONGODB_INITDB_DATABASE=proweb
+    restart: always
   spellcheck:
     container_name: "spellcheck"
     build:
       context: ./spell_check
       dockerfile: Dockerfile
+    restart: always
 
   web:
     container_name: "web"
     build:
       context: ./web
       dockerfile: Dockerfile
+    restart: always

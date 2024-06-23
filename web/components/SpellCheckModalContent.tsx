@@ -40,7 +40,15 @@ const SpellCheckModalContent: React.FC<SpellCheckModalContentProps> = ({
       const editor = quillRef.current.getEditor();
       const text = editor.getText();
       try {
-        const response = await axios.post("http://localhost:5000/spell_check", { text });
+        // const response = await axios.post("http://localhost:5000/spell_check", {
+        //   text,
+        // });
+        const response = await axios.post(
+          "https://knuproweb.kro.kr//api2/spell_check",
+          {
+            text,
+          }
+        );
         setGrammarCheckResult(response.data);
       } catch (error) {
         console.error("Error during grammar check:", error);
