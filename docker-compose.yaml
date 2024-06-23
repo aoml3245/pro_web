@@ -45,3 +45,9 @@ services:
     build:
       context: ./spell_check
       dockerfile: Dockerfile
+
+  web:
+    container_name: "web"
+    build:
+      context: ./web
+      dockerfile: Dockerfile
