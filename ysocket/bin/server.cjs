@@ -73,11 +73,11 @@ yUtils.setPersistence({
     // In the future, this method might also be called in intervals or after a certain number of updates.
     await mdb.flushDocument(docName); // 버퍼에 있는 나머지도 업데이트
 
-    // return new Promise((resolve) => {
-    //   // When the returned Promise resolves, the document will be destroyed.
-    //   // So make sure that the document really has been written to the database.
-    //   resolve();
-    // });
+    return new Promise((resolve) => {
+      // When the returned Promise resolves, the document will be destroyed.
+      // So make sure that the document really has been written to the database.
+      resolve();
+    });
   },
 });
 
@@ -103,6 +103,7 @@ server.listen(port, () => {
 */
 app.post("/manuscripts", async (req, res) => {
   const { collectionName } = req.body;
+  console.log("테스트입니다.");
   console.log(`원고 목록 불러오기 : ${collectionName}`);
 
   // mongoDB와 연결
@@ -119,6 +120,10 @@ app.post("/manuscripts", async (req, res) => {
   const decodedAllDocNames = allDocNames.map((docName) =>
     decodeURIComponent(docName)
   );
+
+  if (manuscriptListMdb) {
+    await manuscriptListMdb.destroy();
+  }
 
   console.log(allDocNames);
   res.json({ manuscripts: decodedAllDocNames });
@@ -222,6 +227,10 @@ app.post("/entire-search", async (req, res) => {
 
     return { title: decodedTitle, contexts };
   });
+
+  if (entireSearchMdb) {
+    await entireSearchMdb.destroy();
+  }
 
   console.log("검색 개수 : ", result.length);
   res.json({ searchWord, results: result });
