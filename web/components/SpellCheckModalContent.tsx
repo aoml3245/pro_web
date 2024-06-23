@@ -18,22 +18,22 @@ const SpellCheckModalContent: React.FC<SpellCheckModalContentProps> = ({
     closeSpellCheckModal();
   };
 
-  const handleSaveChanges = () => {
-    if (quillRef.current && grammarCheckResult) {
-      const editor = quillRef.current.getEditor();
-      const newText = grammarCheckResult.checked; // 수정된 텍스트를 가져옴
-  
-      // 에디터의 내용을 새로운 텍스트로 설정
-      editor.setText(newText);
-  
-      // 에디터 내용이 변경되었음을 알리기 위해 이벤트를 발생시킴
-      const change = new CustomEvent('text-change', {
-        detail: { newText },
-      });
-      editor.root.dispatchEvent(change);
-    }
-    closeSpellCheckModal();
-  };
+const handleSaveChanges = () => {
+  if (quillRef.current && grammarCheckResult) {
+    const editor = quillRef.current.getEditor();
+    const htmlString = grammarCheckResult.checked;
+
+    // Use pasteHTML to convert HTML content to Quill format
+    editor.clipboard.dangerouslyPasteHTML(htmlString);
+
+    // Dispatch a custom event to notify about the text change
+    const change = new CustomEvent('text-change', {
+      detail: { newText: editor.getText() },
+    });
+    editor.root.dispatchEvent(change);
+  }
+  closeSpellCheckModal();
+};
 
   const runGrammarCheck = async () => {
     if (quillRef.current) {
@@ -50,27 +50,40 @@ const SpellCheckModalContent: React.FC<SpellCheckModalContentProps> = ({
 
   const renderCheckedText = (checked: string, words: [string, number][]) => {
     return words.map(([word, errorType], index) => {
+      console.log(word);
       let color = "";
       switch (errorType) {
-        case 2:
-          color = "#FF5757";
-          break;
         case 1:
-          color = "#00C73C";
+          color = "#FF5757"; // Wrong spelling (Red) 
+          break;
+        case 2:
+          color = "#00C73C"; // Wrong spacing (Green)
           break;
         case 3:
-          color = "#B22AF8";
+          color = "#B22AF8"; // Ambiguous (Violet)
           break;
         case 4:
-          color = "#32ABEA";
+          color = "#32ABEA"; // Statistical correction (Blue)
           break;
         default:
           color = "black";
       }
+
+      // Replace <br> tags with line breaks and preserve spaces
+      const formattedWord = word.replace(/<br\s*\/?>/gi, "\n").replace(/<[^>]+>/g, "");
+
+      console.log(formattedWord);
       return (
-        <span key={index} style={{ color: color }}>
-          {word}{" "}
-        </span>
+        <React.Fragment key={index}>
+          {formattedWord.split("\n").map((line, lineIndex) => (
+            <React.Fragment key={lineIndex}>
+              <span style={{ color: color }}>
+                {line}{" "}
+              </span>
+              {lineIndex < formattedWord.split("\n").length - 1 && <br />}
+            </React.Fragment>
+          ))}
+        </React.Fragment>
       );
     });
   };
