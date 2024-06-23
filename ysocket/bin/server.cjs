@@ -224,12 +224,12 @@ app.post("/entire-search", async (req, res) => {
       contexts.push(context);
     }
 
-     if (entireSearchMdb) {
-       await entireSearchMdb.destroy();
-     }
-
     return { title: decodedTitle, contexts };
   });
+
+  if (entireSearchMdb) {
+    await entireSearchMdb.destroy();
+  }
 
   console.log("검색 개수 : ", result.length);
   res.json({ searchWord, results: result });
